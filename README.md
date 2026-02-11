@@ -1,0 +1,66 @@
+# second-brain
+
+Semantic search over an Obsidian vault using RAG, Qdrant, and MCP.
+
+## Architecture
+
+```text
+Obsidian vault (.md) → Indexing script → Embedding API → Qdrant (Docker)
+                                                              ↑
+Claude Desktop ← MCP server (qdrant-mcp-server) ─────────────┘
+```
+
+- **Vector DB**: Qdrant in local Docker, persistent volume
+- **Embedding**: configurable — OpenAI, Cohere, Voyage AI, or Ollama
+- **MCP server**: `mhalder/qdrant-mcp-server` (TypeScript, multi-provider)
+- **Indexing**: Python script with Obsidian-aware parsing (frontmatter, headings, wiki-links, tags)
+
+## Prerequisites
+
+- Python 3.13+
+- [uv](https://docs.astral.sh/uv/)
+- Docker (for Qdrant)
+
+## Setup
+
+```bash
+# Install dependencies
+uv sync
+
+# Start Qdrant
+docker compose up -d
+
+# Run tests
+uv run pytest
+```
+
+## Usage
+
+```bash
+# Index your vault
+uv run second-brain index /path/to/vault
+
+# Search (for testing outside MCP)
+uv run second-brain search "query text"
+```
+
+## Configuration
+
+Environment variables:
+
+| Variable             | Description                            | Default                  |
+| -------------------- | -------------------------------------- | ------------------------ |
+| `QDRANT_URL`         | Qdrant server URL                      | `http://localhost:6333`  |
+| `EMBEDDING_PROVIDER` | `openai`, `cohere`                     | `openai`                 |
+| `OPENAI_API_KEY`     | OpenAI API key (if using OpenAI)       | —                        |
+| `COHERE_API_KEY`     | Cohere API key (if using Cohere)       | —                        |
+| `COLLECTION_NAME`    | Qdrant collection name                 | `obsidian`               |
+
+## Project structure
+
+```text
+src/second_brain/
+    main.py          # CLI entry point
+tests/
+docker-compose.yml
+```
