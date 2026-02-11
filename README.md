@@ -50,6 +50,7 @@ Environment variables:
 
 | Variable             | Description                            | Default                  |
 | -------------------- | -------------------------------------- | ------------------------ |
+| `OBSIDIAN_VAULT_PATH`| Absolute path to your Obsidian vault   | — (required)             |
 | `QDRANT_URL`         | Qdrant server URL                      | `http://localhost:6333`  |
 | `EMBEDDING_PROVIDER` | `openai`, `cohere`                     | `openai`                 |
 | `OPENAI_API_KEY`     | OpenAI API key (if using OpenAI)       | —                        |
@@ -60,6 +61,7 @@ Environment variables:
 
 ```text
 src/second_brain/
+    config.py        # Environment variable handling
     main.py          # CLI entry point
 tests/
 docker-compose.yml

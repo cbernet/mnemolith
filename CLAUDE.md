@@ -4,6 +4,8 @@
 
 second-brain — Python CLI that indexes an Obsidian vault into Qdrant (vector DB) for semantic search via RAG. Used as backend for an MCP server that gives Claude access to the vault.
 
+The Obsidian vault path is configured via the `OBSIDIAN_VAULT_PATH` environment variable.
+
 ## Tech stack
 
 - Python 3.13, managed with uv
@@ -25,6 +27,7 @@ docker compose up -d # start Qdrant
 - write tests for your code
 - run the tests when you're done editing
 - feel free to propose updates to CLAUDE.md based on our discussion, but keep this file simple.
+- feel free to propose updates to the README.md
 
 ## Code style
 
@@ -38,7 +41,7 @@ docker compose up -d # start Qdrant
 
 ## Project structure
 
-- `src/second_brain/` — source code
+- `src/second_brain/` — source code (`config.py` for env var handling)
 - `tests/` — pytest tests, mirror the src structure
 - `pyproject.toml` — project config, dependencies, CLI entry points
 - `docker-compose.yml` — Qdrant service
