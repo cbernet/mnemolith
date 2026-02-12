@@ -4,7 +4,10 @@ from qdrant_client.models import Distance, VectorParams, PointStruct
 from second_brain.parser import Document
 
 
-def get_client(url: str = "http://localhost:6333") -> QdrantClient:
+def get_client(url: str | None = None) -> QdrantClient:
+    if url is None:
+        from second_brain.config import get_qdrant_url
+        url = get_qdrant_url()
     return QdrantClient(url=url)
 
 

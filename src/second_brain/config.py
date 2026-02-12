@@ -1,5 +1,9 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 def get_vault_path() -> str:
     """Return the Obsidian vault path from OBSIDIAN_VAULT_PATH env var."""

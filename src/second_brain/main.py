@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from second_brain.config import get_vault_path, get_qdrant_url, get_collection_name, get_embedding_provider
+from second_brain.config import get_vault_path, get_collection_name, get_embedding_provider
 from second_brain.embeddings import OpenAIEmbedder
 from second_brain.indexer import index_vault, search
 from second_brain.qdrant_store import get_client
@@ -17,14 +17,14 @@ def build_embedder():
 def cmd_index(args):
     vault_path = args.vault_path or get_vault_path()
     embedder = build_embedder()
-    client = get_client(get_qdrant_url())
+    client = get_client()
     documents = index_vault(vault_path, embedder, client, get_collection_name())
     print(f"Indexed {len(documents)} documents.")
 
 
 def cmd_search(args):
     embedder = build_embedder()
-    client = get_client(get_qdrant_url())
+    client = get_client()
     results = search(args.query, embedder, client, get_collection_name(), limit=args.limit)
     for r in results:
         print(f"[{r['score']:.3f}] {r['path']}: {r['title']}")

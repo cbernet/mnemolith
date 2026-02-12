@@ -9,7 +9,7 @@ def index_vault(
     vault_path: str,
     embedder: Embedder,
     client: QdrantClient,
-    collection: str = "obsidian",
+    collection: str,
 ) -> list[Document]:
     documents = parse_vault(vault_path)
     if not documents:
@@ -25,7 +25,7 @@ def search(
     query: str,
     embedder: Embedder,
     client: QdrantClient,
-    collection: str = "obsidian",
+    collection: str,
     limit: int = 5,
 ) -> list[dict]:
     query_vector = embedder.embed(query)

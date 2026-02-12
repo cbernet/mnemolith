@@ -46,7 +46,13 @@ uv run second-brain search "query text"
 
 ## Configuration
 
-Environment variables:
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+Environment variables (set via `.env` or shell — shell values take precedence):
 
 | Variable             | Description                            | Default                  |
 | -------------------- | -------------------------------------- | ------------------------ |
