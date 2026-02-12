@@ -10,3 +10,15 @@ def get_vault_path() -> str:
             "Set it to the absolute path of your Obsidian vault."
         )
     return vault_path
+
+
+def get_qdrant_url() -> str:
+    return os.environ.get("QDRANT_URL", "http://localhost:6333")
+
+
+def get_collection_name() -> str:
+    return os.environ.get("COLLECTION_NAME", "obsidian")
+
+
+def get_embedding_provider() -> str:
+    return os.environ.get("EMBEDDING_PROVIDER", "openai")

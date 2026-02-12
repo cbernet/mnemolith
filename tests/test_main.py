@@ -1,7 +1,13 @@
-from second_brain.main import main
+import subprocess
+import sys
 
 
-def test_main(capsys):
-    main()
-    captured = capsys.readouterr()
-    assert captured.out == "Hello from second-brain!\n"
+def test_main_help():
+    result = subprocess.run(
+        [sys.executable, "-m", "second_brain.main", "--help"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "index" in result.stdout
+    assert "search" in result.stdout
