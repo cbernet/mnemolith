@@ -27,10 +27,13 @@ Claude Desktop ← MCP server (qdrant-mcp-server) ──────────
 # Install dependencies
 uv sync
 
-# Start Qdrant
+# Start Qdrant (required for indexing, search, and integration tests)
 docker compose up -d
 
-# Run tests
+# Run unit tests only
+uv run pytest -m "not integration"
+
+# Run all tests (requires Qdrant running)
 uv run pytest
 ```
 

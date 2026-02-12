@@ -22,12 +22,20 @@ uv run second-brain  # run CLI
 docker compose up -d # start Qdrant
 ```
 
-## Coding workflow
-
-- write tests for your code
+## test-driven development
+  
+- write new unit tests first
+- run the tests to make sure they fail
+- write the code
+- make sure the tests pass by editing the code 
 - run the tests when you're done editing
-- feel free to propose updates to CLAUDE.md based on our discussion, but keep this file simple.
-- feel free to propose updates to the README.md
+
+When you're working on a new functionality, if existing tests fail, don't modify the tests, modify the code to make sure tests pass. 
+
+## Updating the knowledge base and your behaviour
+
+- propose updates to CLAUDE.md based on our discussion, but keep this file simple.
+- propose updates to the README.md
 
 ## Code style
 

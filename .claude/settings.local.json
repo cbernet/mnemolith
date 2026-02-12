@@ -4,7 +4,8 @@
       "Bash(uv sync:*)",
       "Bash(uv run pytest:*)",
       "Bash(curl:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(uv run python:*)"
     ]
   }
 }

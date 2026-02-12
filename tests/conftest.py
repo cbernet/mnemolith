@@ -2,6 +2,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from qdrant_client.http.exceptions import ResponseHandlingException
 
 from second_brain.embeddings import MockEmbedder
 
@@ -24,7 +25,11 @@ def qdrant_collection():
     from second_brain.qdrant_store import get_client, delete_collection
 
     name = f"test_{uuid.uuid4().hex[:8]}"
-    client = get_client()
+    try:
+        client = get_client()
+        client.get_collections()  # verify connection
+    except ResponseHandlingException:
+        pytest.skip("Qdrant not reachable — run: docker compose up -d")
     yield name, client
     try:
         delete_collection(client, name)
