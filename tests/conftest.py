@@ -2,9 +2,12 @@ import uuid
 from pathlib import Path
 
 import pytest
+from dotenv import load_dotenv
 from qdrant_client.http.exceptions import ResponseHandlingException
 
 from second_brain.embeddings import MockEmbedder
+
+load_dotenv()
 
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "vault"

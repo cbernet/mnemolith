@@ -23,7 +23,8 @@ docker compose up -d # start Qdrant
 ```
 
 ## test-driven development
-  
+
+- start in plan mode when I ask you to do something
 - write new unit tests first
 - run the tests to make sure they fail
 - write the code
@@ -32,8 +33,14 @@ docker compose up -d # start Qdrant
 
 When you're working on a new functionality, if existing tests fail, don't modify the tests, modify the code to make sure tests pass. 
 
-## Updating the knowledge base and your behaviour
+Do not overdo tests :
 
+- group tests that can be grouped together
+- don't test trivial things 
+
+## Managing our interactions
+
+- feel free to disagree with me (even strongly), I'm not that sensitive and I don't know everything. 
 - propose updates to CLAUDE.md based on our discussion, but keep this file simple.
 - propose updates to the README.md
 

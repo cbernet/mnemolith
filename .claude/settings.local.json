@@ -5,7 +5,8 @@
       "Bash(uv run pytest:*)",
       "Bash(curl:*)",
       "Bash(python3:*)",
-      "Bash(uv run python:*)"
+      "Bash(uv run python:*)",
+      "Bash(uv pip list:*)"
     ]
   }
 }
