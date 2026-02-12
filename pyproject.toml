@@ -22,7 +22,14 @@ markers = [
     "integration: tests requiring a running Qdrant instance",
 ]
 
+[tool.coverage.run]
+source = ["second_brain"]
+
+[tool.coverage.report]
+show_missing = true
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "pytest-cov>=6.0",
 ]
