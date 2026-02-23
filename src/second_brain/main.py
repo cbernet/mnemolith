@@ -3,19 +3,10 @@ import sys
 
 from qdrant_client.http.exceptions import UnexpectedResponse
 
-from second_brain.config import get_vault_path, get_collection_name, get_embedding_provider
-from second_brain.embeddings import OpenAIEmbedder
+from second_brain.config import get_vault_path, get_collection_name
+from second_brain.embeddings import build_embedder
 from second_brain.indexer import index_vault, search
 from second_brain.qdrant_store import get_client
-
-import pprint
-
-
-def build_embedder():
-    provider = get_embedding_provider()
-    if provider == "openai":
-        return OpenAIEmbedder()
-    raise ValueError(f"Unknown embedding provider: {provider}")
 
 
 def cmd_index(args):

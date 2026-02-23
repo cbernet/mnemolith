@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "mcp[cli]>=1.0",
     "openai>=1.0,<2.0",
     "python-dotenv>=1.0",
     "qdrant-client>=1.9",
@@ -18,6 +19,7 @@ build-backend = "hatchling.build"
 
 [project.scripts]
 second-brain = "second_brain.main:main"
+second-brain-mcp = "second_brain.mcp_server:main"
 
 [tool.pytest.ini_options]
 markers = [

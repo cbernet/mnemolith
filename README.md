@@ -7,13 +7,13 @@ Semantic search over an Obsidian vault using RAG, Qdrant, and MCP.
 ```text
 Obsidian vault (.md) → Indexing script → Embedding API → Qdrant (Docker)
                                                               ↑
-Claude Desktop ← MCP server (qdrant-mcp-server) ─────────────┘
+Claude ← MCP server (second-brain-mcp) ──────────────────────┘
 ```
 
 - **Vector DB**: Qdrant in local Docker, persistent volume
-- **Embedding**: configurable — OpenAI, Cohere, Voyage AI, or Ollama
-- **MCP server**: `mhalder/qdrant-mcp-server` (TypeScript, multi-provider)
-- **Indexing**: Python script with Obsidian-aware parsing (frontmatter, headings, wiki-links, tags)
+- **Embedding**: configurable — OpenAI or Cohere
+- **MCP server**: built-in, uses stdio transport
+- **Indexing**: Python CLI with Obsidian-aware parsing (frontmatter, headings, wiki-links, tags)
 
 ## Prerequisites
 
@@ -65,6 +65,31 @@ Environment variables (set via `.env` or shell — shell values take precedence)
 | `OPENAI_API_KEY`     | OpenAI API key (if using OpenAI)       | —                        |
 | `COHERE_API_KEY`     | Cohere API key (if using Cohere)       | —                        |
 | `COLLECTION_NAME`    | Qdrant collection name                 | `obsidian`               |
+
+NOTE: Cohere not implemented yet !
+
+## MCP Server
+
+The project includes an MCP server that lets Claude search your vault via semantic search.
+
+Add the following to your MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "second-brain": {
+      "command": "uv",
+      "args": ["run", "--directory", "/absolute/path/to/second-brain", "second-brain-mcp"]
+    }
+  }
+}
+```
+
+Replace `/absolute/path/to/second-brain` with the actual path to this project. Make sure your `.env` file is configured (especially `OPENAI_API_KEY`) and that Qdrant is running.
+
+The server exposes a `search` tool that Claude can call to find relevant notes in your vault.
+
+See [.mcp.json](./.mcp.json) for an example. 
 
 ## Project structure
 

@@ -1,6 +1,8 @@
 import random
 from typing import Protocol
 
+from second_brain.config import get_embedding_provider
+
 
 class Embedder(Protocol):
     dimension: int
@@ -21,6 +23,13 @@ class MockEmbedder:
 
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
         return [self.embed(t) for t in texts]
+
+
+def build_embedder() -> Embedder:
+    provider = get_embedding_provider()
+    if provider == "openai":
+        return OpenAIEmbedder()
+    raise ValueError(f"Unknown embedding provider: {provider}")
 
 
 class OpenAIEmbedder:
