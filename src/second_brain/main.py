@@ -6,6 +6,8 @@ from second_brain.embeddings import OpenAIEmbedder
 from second_brain.indexer import index_vault, search
 from second_brain.qdrant_store import get_client
 
+import pprint
+
 
 def build_embedder():
     provider = get_embedding_provider()
@@ -26,10 +28,13 @@ def cmd_search(args):
     embedder = build_embedder()
     client = get_client()
     results = search(args.query, embedder, client, get_collection_name(), limit=args.limit)
-    for r in results:
+    for r in reversed(results):
         heading = f" > {r['heading']}" if r.get('heading') else ""
+        print("-"*70)
+        print("\n")
         print(f"[{r['score']:.3f}] {r['path']}: {r['title']}{heading}")
-
+        print("\n")
+        print(r["content"])
 
 def main():
     parser = argparse.ArgumentParser(prog="second-brain")
