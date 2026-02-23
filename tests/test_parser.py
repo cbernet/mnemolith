@@ -4,6 +4,7 @@ from second_brain.parser import (
     extract_links,
     extract_inline_tags,
     parse_vault,
+    build_embedding_text,
 )
 
 
@@ -88,3 +89,42 @@ def test_parse_vault_no_frontmatter(vault_path):
     nf = next(d for d in docs if d.title == "no-frontmatter")
     assert nf.frontmatter == {}
     assert "Just Content" in nf.content
+
+
+def test_parse_vault_title_words_in_tags(vault_path):
+    docs = parse_vault(vault_path)
+    deep = next(d for d in docs if d.title == "deep-note")
+    assert "deep" in deep.tags
+    assert "note" in deep.tags
+
+
+def test_parse_vault_folder_parts_in_tags(vault_path):
+    docs = parse_vault(vault_path)
+    deep = next(d for d in docs if d.title == "deep-note")
+    # "nested" comes from both frontmatter and folder — should be present
+    assert "nested" in deep.tags
+    # root-level file should not have folder tags
+    simple = next(d for d in docs if d.title == "simple")
+    assert "simple" in simple.tags  # title word
+
+
+def test_build_embedding_text_with_folders():
+    doc = Document(
+        path="projects/machine-learning/note.md",
+        title="note",
+        content="Some body content.",
+        tags=["note", "projects", "machine-learning"],
+    )
+    text = build_embedding_text(doc)
+    assert text == "# note\n\n#note #projects #machine-learning\n\nSome body content."
+
+
+def test_build_embedding_text_root_level():
+    doc = Document(
+        path="simple.md",
+        title="simple",
+        content="Body here.",
+        tags=["simple"],
+    )
+    text = build_embedding_text(doc)
+    assert text == "# simple\n\n#simple\n\nBody here."

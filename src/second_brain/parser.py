@@ -54,7 +54,9 @@ def parse_file(filepath: Path, vault_root: Path) -> Document | None:
 
     fm_tags = frontmatter.get("tags", []) or []
     inline_tags = extract_inline_tags(body)
-    all_tags = list(dict.fromkeys(fm_tags + inline_tags))
+    title_words = re.split(r"[-_]", title)
+    folder_parts = list(Path(relative_path).parent.parts)
+    all_tags = list(dict.fromkeys(fm_tags + inline_tags + title_words + folder_parts))
 
     links = extract_links(body)
 
@@ -66,6 +68,15 @@ def parse_file(filepath: Path, vault_root: Path) -> Document | None:
         tags=all_tags,
         links=links,
     )
+
+
+def build_embedding_text(doc: Document) -> str:
+    parts = [f"# {doc.title}", ""]
+    if doc.tags:
+        tag_line = " ".join(f"#{t}" for t in doc.tags)
+        parts.extend([tag_line, ""])
+    parts.append(doc.content)
+    return "\n".join(parts)
 
 
 def parse_vault(vault_path: str) -> list[Document]:
