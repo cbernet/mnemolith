@@ -6,7 +6,8 @@
       "Bash(curl:*)",
       "Bash(python3:*)",
       "Bash(uv run python:*)",
-      "Bash(uv pip list:*)"
+      "Bash(uv pip list:*)",
+      "Bash(wc:*)"
     ]
   }
 }

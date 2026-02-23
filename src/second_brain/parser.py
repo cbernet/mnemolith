@@ -13,9 +13,11 @@ class Document:
     frontmatter: dict = field(default_factory=dict)
     tags: list[str] = field(default_factory=list)
     links: list[str] = field(default_factory=list)
+    heading: str | None = None
 
 
 FRONTMATTER_RE = re.compile(r"^---\n(.+?)\n---\n?", re.DOTALL)
+HEADING2_RE = re.compile(r"^## (.+)$", re.MULTILINE)
 WIKI_LINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 INLINE_TAG_RE = re.compile(r"(?<=\s)#([a-zA-Z][\w-]*)")
 
@@ -70,8 +72,48 @@ def parse_file(filepath: Path, vault_root: Path) -> Document | None:
     )
 
 
+def chunk_document(doc: Document) -> list[Document]:
+    splits = HEADING2_RE.split(doc.content)
+    # splits alternates: [intro, heading1, body1, heading2, body2, ...]
+    intro = splits[0].strip()
+    chunks = []
+
+    if intro:
+        chunks.append(Document(
+            path=doc.path,
+            title=doc.title,
+            content=intro,
+            frontmatter=doc.frontmatter,
+            tags=doc.tags,
+            links=doc.links,
+        ))
+
+    for i in range(1, len(splits), 2):
+        heading = splits[i].strip()
+        body = splits[i + 1].strip() if i + 1 < len(splits) else ""
+        if not body and not heading:
+            continue
+        chunks.append(Document(
+            path=doc.path,
+            title=doc.title,
+            content=body,
+            frontmatter=doc.frontmatter,
+            tags=doc.tags,
+            links=doc.links,
+            heading=heading,
+        ))
+
+    if not chunks:
+        chunks.append(doc)
+
+    return chunks
+
+
 def build_embedding_text(doc: Document) -> str:
-    parts = [f"# {doc.title}", ""]
+    parts = [f"# {doc.title}"]
+    if doc.heading:
+        parts.append(f"## {doc.heading}")
+    parts.append("")
     if doc.tags:
         tag_line = " ".join(f"#{t}" for t in doc.tags)
         parts.extend([tag_line, ""])

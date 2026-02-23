@@ -40,6 +40,7 @@ def upsert_documents(
                 "content": doc.content,
                 "tags": doc.tags,
                 "links": doc.links,
+                "heading": doc.heading,
             },
         )
         for i, (doc, vector) in enumerate(zip(documents, vectors))

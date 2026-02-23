@@ -5,6 +5,7 @@ from second_brain.parser import (
     extract_inline_tags,
     parse_vault,
     build_embedding_text,
+    chunk_document,
 )
 
 
@@ -128,3 +129,78 @@ def test_build_embedding_text_root_level():
     )
     text = build_embedding_text(doc)
     assert text == "# simple\n\n#simple\n\nBody here."
+
+
+def test_build_embedding_text_with_heading():
+    doc = Document(
+        path="test.md",
+        title="My Note",
+        content="Section body.",
+        tags=["tag1"],
+        heading="Important Section",
+    )
+    text = build_embedding_text(doc)
+    assert text == "# My Note\n## Important Section\n\n#tag1\n\nSection body."
+
+
+def test_chunk_document_with_headings():
+    doc = Document(
+        path="test.md",
+        title="test",
+        content="Intro text.\n\n## Section A\n\nBody A.\n\n## Section B\n\nBody B.",
+        tags=["tag1"],
+        links=["link1"],
+    )
+    chunks = chunk_document(doc)
+    assert len(chunks) == 3
+    # Intro chunk
+    assert chunks[0].heading is None
+    assert chunks[0].content == "Intro text."
+    assert chunks[0].path == "test.md"
+    assert chunks[0].tags == ["tag1"]
+    assert chunks[0].links == ["link1"]
+    # Section A
+    assert chunks[1].heading == "Section A"
+    assert chunks[1].content == "Body A."
+    assert chunks[1].path == "test.md"
+    # Section B
+    assert chunks[2].heading == "Section B"
+    assert chunks[2].content == "Body B."
+
+
+def test_chunk_document_no_headings():
+    doc = Document(
+        path="test.md",
+        title="test",
+        content="Just plain text, no headings.",
+        tags=["tag1"],
+    )
+    chunks = chunk_document(doc)
+    assert len(chunks) == 1
+    assert chunks[0].heading is None
+    assert chunks[0].content == "Just plain text, no headings."
+
+
+def test_chunk_document_no_intro():
+    doc = Document(
+        path="test.md",
+        title="test",
+        content="## Only Section\n\nContent here.",
+    )
+    chunks = chunk_document(doc)
+    assert len(chunks) == 1
+    assert chunks[0].heading == "Only Section"
+    assert chunks[0].content == "Content here."
+
+
+def test_chunk_document_preserves_h3():
+    """### headings are NOT split points — they stay with their parent ## section."""
+    doc = Document(
+        path="test.md",
+        title="test",
+        content="## Parent\n\nIntro.\n\n### Sub\n\nSub content.",
+    )
+    chunks = chunk_document(doc)
+    assert len(chunks) == 1
+    assert chunks[0].heading == "Parent"
+    assert "### Sub" in chunks[0].content

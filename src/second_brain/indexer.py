@@ -1,7 +1,7 @@
 from qdrant_client import QdrantClient
 from tqdm import tqdm
 
-from second_brain.parser import Document, parse_vault, build_embedding_text
+from second_brain.parser import Document, parse_vault, build_embedding_text, chunk_document
 from second_brain.embeddings import Embedder
 from second_brain.qdrant_store import ensure_collection, upsert_documents, search as qdrant_search
 
@@ -16,10 +16,14 @@ def index_vault(
     if not documents:
         return documents
 
+    chunks = []
+    for doc in documents:
+        chunks.extend(chunk_document(doc))
+
     ensure_collection(client, collection, embedder.dimension)
-    vectors = [embedder.embed(build_embedding_text(doc)) for doc in tqdm(documents, desc="Embedding")]
-    upsert_documents(client, collection, documents, vectors)
-    return documents
+    vectors = [embedder.embed(build_embedding_text(chunk)) for chunk in tqdm(chunks, desc="Embedding")]
+    upsert_documents(client, collection, chunks, vectors)
+    return chunks
 
 
 def search(

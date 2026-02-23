@@ -18,8 +18,8 @@ def cmd_index(args):
     vault_path = args.vault_path or get_vault_path()
     embedder = build_embedder()
     client = get_client()
-    documents = index_vault(vault_path, embedder, client, get_collection_name())
-    print(f"Indexed {len(documents)} documents.")
+    chunks = index_vault(vault_path, embedder, client, get_collection_name())
+    print(f"Indexed {len(chunks)} chunks.")
 
 
 def cmd_search(args):
@@ -27,7 +27,8 @@ def cmd_search(args):
     client = get_client()
     results = search(args.query, embedder, client, get_collection_name(), limit=args.limit)
     for r in results:
-        print(f"[{r['score']:.3f}] {r['path']}: {r['title']}")
+        heading = f" > {r['heading']}" if r.get('heading') else ""
+        print(f"[{r['score']:.3f}] {r['path']}: {r['title']}{heading}")
 
 
 def main():
