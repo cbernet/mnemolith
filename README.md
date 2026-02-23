@@ -96,7 +96,21 @@ See [.mcp.json](./.mcp.json) for an example.
 ```text
 src/second_brain/
     config.py        # Environment variable handling
-    main.py          # CLI entry point
+    main.py          # CLI entry point (index, search commands)
+    parser.py        # Obsidian-aware markdown parser (frontmatter, wiki-links, tags)
+    embeddings.py    # Embedding provider abstraction (OpenAI, Cohere)
+    indexer.py       # Vault indexing pipeline
+    qdrant_store.py  # Qdrant vector store client
+    mcp_server.py    # MCP server exposing search tool to Claude
 tests/
+    conftest.py
+    test_config.py
+    test_parser.py
+    test_embeddings.py
+    test_indexer.py
+    test_mcp_server.py
+    test_main.py
+    test_integration.py
+    fixtures/vault/  # Sample markdown notes for testing
 docker-compose.yml
 ```
