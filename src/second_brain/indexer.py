@@ -1,5 +1,4 @@
 from qdrant_client import QdrantClient
-from tqdm import tqdm
 
 from second_brain.parser import Document, parse_vault, build_embedding_text, chunk_document
 from second_brain.embeddings import Embedder
@@ -21,7 +20,9 @@ def index_vault(
         chunks.extend(chunk_document(doc))
 
     ensure_collection(client, collection, embedder.dimension)
-    vectors = [embedder.embed(build_embedding_text(chunk)) for chunk in tqdm(chunks, desc="Embedding")]
+    texts = [build_embedding_text(chunk) for chunk in chunks]
+    print(f"Embedding {len(texts)} chunks...")
+    vectors = embedder.embed_batch(texts)
     upsert_documents(client, collection, chunks, vectors)
     return chunks
 

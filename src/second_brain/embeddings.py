@@ -6,6 +6,7 @@ class Embedder(Protocol):
     dimension: int
 
     def embed(self, text: str) -> list[float]: ...
+    def embed_batch(self, texts: list[str]) -> list[list[float]]: ...
 
 
 class MockEmbedder:
@@ -17,6 +18,9 @@ class MockEmbedder:
     def embed(self, text: str) -> list[float]:
         rng = random.Random(text)
         return [rng.uniform(-1, 1) for _ in range(self.dimension)]
+
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        return [self.embed(t) for t in texts]
 
 
 class OpenAIEmbedder:
@@ -31,3 +35,7 @@ class OpenAIEmbedder:
     def embed(self, text: str) -> list[float]:
         response = self.client.embeddings.create(input=text, model=self.model)
         return response.data[0].embedding
+
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        response = self.client.embeddings.create(input=texts, model=self.model)
+        return [item.embedding for item in response.data]

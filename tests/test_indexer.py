@@ -1,11 +1,13 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 from second_brain.indexer import index_vault
 
 
-def test_index_vault_shows_progress(vault_path, mock_embedder):
-    """index_vault wraps embedding in a tqdm progress bar."""
+def test_index_vault_uses_embed_batch(vault_path, mock_embedder):
+    """index_vault calls embed_batch with all texts at once."""
     client = MagicMock()
-    with patch("second_brain.indexer.tqdm", side_effect=lambda it, **kw: it) as mock_tqdm:
-        index_vault(vault_path, mock_embedder, client, "test")
-        mock_tqdm.assert_called_once()
+    chunks = index_vault(vault_path, mock_embedder, client, "test")
+    # upsert_documents should have been called with vectors matching chunk count
+    call_args = client.upsert.call_args
+    points = call_args.kwargs["points"]
+    assert len(points) == len(chunks)

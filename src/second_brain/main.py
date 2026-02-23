@@ -1,6 +1,8 @@
 import argparse
 import sys
 
+from qdrant_client.http.exceptions import UnexpectedResponse
+
 from second_brain.config import get_vault_path, get_collection_name, get_embedding_provider
 from second_brain.embeddings import OpenAIEmbedder
 from second_brain.indexer import index_vault, search
@@ -27,7 +29,14 @@ def cmd_index(args):
 def cmd_search(args):
     embedder = build_embedder()
     client = get_client()
-    results = search(args.query, embedder, client, get_collection_name(), limit=args.limit)
+    collection = get_collection_name()
+    try:
+        results = search(args.query, embedder, client, collection, limit=args.limit)
+    except UnexpectedResponse as e:
+        if e.status_code == 404:
+            print(f"Collection '{collection}' not found. Run 'second-brain index' first.")
+            sys.exit(1)
+        raise
     for r in reversed(results):
         heading = f" > {r['heading']}" if r.get('heading') else ""
         print("-"*70)
