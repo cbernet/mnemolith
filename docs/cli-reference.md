@@ -38,7 +38,8 @@ uv run mnemolith index ~/Obsidian\ Vault
 
 **Notes:**
 
-- Indexing replaces all existing data in the collection (points are re-inserted with sequential IDs starting from 0)
+- Indexing upserts vectors using sequential IDs — existing points at the same IDs are replaced, but points at IDs that no longer exist (e.g. from deleted notes) are **not** removed
+- To fully reset the index, delete the Qdrant collection and re-run `index`
 - Re-run after adding or editing notes to keep the index up to date
 
 ## `mnemolith search`

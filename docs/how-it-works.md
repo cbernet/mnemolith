@@ -76,7 +76,7 @@ Vectors are stored in Qdrant using cosine similarity. Each point contains:
 - **Vector** — the embedding
 - **Payload** — `path`, `title`, `content`, `tags`, `links`, `heading`
 
-The collection is created automatically on first index. Points use sequential integer IDs, so re-indexing fully replaces the previous data.
+The collection is created automatically on first index. Points use sequential integer IDs. Re-indexing upserts vectors at those IDs, but does **not** remove points at IDs that no longer exist — stale vectors from deleted notes remain until the collection is manually deleted and rebuilt.
 
 ## Search
 
