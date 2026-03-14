@@ -6,9 +6,11 @@ permissions:
 
 on:
   pull_request:
+    types: [labeled, synchronize]
 
 jobs:
   claude-security-review:
+    if: contains(github.event.pull_request.labels.*.name, 'claude-review')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
