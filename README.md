@@ -1,5 +1,9 @@
 # mnemolith
 
+[![CI](https://github.com/cbernet/mnemolith/actions/workflows/ci.yml/badge.svg)](https://github.com/cbernet/mnemolith/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/cbernet/mnemolith/branch/main/graph/badge.svg)](https://codecov.io/gh/cbernet/mnemolith)
+[![Security Review](https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml/badge.svg)](https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml)
+
 *Your thoughts, carved in stone.* Semantic search over an Obsidian vault using RAG, Qdrant, and MCP.
 
 ## Architecture
