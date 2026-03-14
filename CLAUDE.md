@@ -38,6 +38,10 @@ Do not overdo tests :
 - group tests that can be grouped together
 - don't test trivial things
 
+However :
+
+- try and reach a coverage of 90%
+
 ## Managing our interactions
 
 - feel free to disagree with me (even strongly), I'm not that sensitive and I don't know everything.

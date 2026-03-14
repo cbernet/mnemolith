@@ -16,6 +16,13 @@ def test_parse_frontmatter_basic():
     assert body.startswith("# Title")
 
 
+def test_parse_frontmatter_invalid_yaml():
+    text = "---\n: [invalid yaml\n---\nBody"
+    fm, body = parse_frontmatter(text)
+    assert fm == {}
+    assert body == text
+
+
 def test_parse_frontmatter_missing():
     text = "# No frontmatter\nJust text."
     fm, body = parse_frontmatter(text)

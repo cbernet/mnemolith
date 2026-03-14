@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from mnemolith.embeddings import MockEmbedder, OpenAIEmbedder
+from mnemolith.embeddings import MockEmbedder, OpenAIEmbedder, build_embedder
 
 
 def test_mock_embedder_dimension():
@@ -94,3 +94,9 @@ def test_openai_embedder_real_api():
     assert all(isinstance(v, float) for v in vec)
     assert not any(math.isnan(v) for v in vec)
     assert sum(abs(v) for v in vec) > 0
+
+
+def test_build_embedder_unknown_provider(monkeypatch):
+    monkeypatch.setenv("EMBEDDING_PROVIDER", "unknown")
+    with pytest.raises(ValueError, match="Unknown embedding provider"):
+        build_embedder()
