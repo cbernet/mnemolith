@@ -9,7 +9,8 @@
     ],
     "additionalDirectories": [
       "/Users/cbernet/Code",
-      "/Users/cbernet/.claude/marketplaces/local/.claude-plugin"
+      "/Users/cbernet/.claude/marketplaces/local/.claude-plugin",
+      "/Users/cbernet/Code/mnemolith"
     ]
   }
 }
