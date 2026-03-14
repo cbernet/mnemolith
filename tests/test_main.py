@@ -4,7 +4,7 @@ import sys
 
 def test_main_help():
     result = subprocess.run(
-        [sys.executable, "-m", "second_brain.main", "--help"],
+        [sys.executable, "-m", "mnemolith.main", "--help"],
         capture_output=True,
         text=True,
     )

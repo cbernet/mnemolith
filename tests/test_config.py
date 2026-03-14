@@ -1,6 +1,6 @@
 import pytest
 
-from second_brain.config import get_vault_path
+from mnemolith.config import get_vault_path
 
 
 def test_get_vault_path(monkeypatch):

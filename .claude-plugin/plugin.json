@@ -1,11 +1,11 @@
 {
-  "name": "second-brain",
+  "name": "mnemolith",
   "description": "Obsidian vault toolkit: semantic search (MCP) + note creation (skill)",
   "version": "1.0.0",
   "mcpServers": {
-    "second-brain": {
+    "mnemolith": {
       "command": "uv",
-      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "second-brain-mcp"]
+      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "mnemolith-mcp"]
     }
   }
 }

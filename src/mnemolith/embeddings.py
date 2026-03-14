@@ -1,7 +1,7 @@
 import random
 from typing import Protocol
 
-from second_brain.config import get_embedding_provider
+from mnemolith.config import get_embedding_provider
 
 
 class Embedder(Protocol):

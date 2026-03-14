@@ -1,11 +1,11 @@
 from mcp.server.fastmcp import FastMCP
 
-from second_brain.config import get_collection_name
-from second_brain.embeddings import build_embedder
-from second_brain.indexer import search as indexer_search
-from second_brain.qdrant_store import get_client
+from mnemolith.config import get_collection_name
+from mnemolith.embeddings import build_embedder
+from mnemolith.indexer import search as indexer_search
+from mnemolith.qdrant_store import get_client
 
-mcp = FastMCP("second-brain")
+mcp = FastMCP("mnemolith")
 
 
 def format_results(results: list[dict]) -> str:
@@ -20,9 +20,13 @@ def format_results(results: list[dict]) -> str:
     return "\n\n---\n\n".join(parts)
 
 
+MAX_LIMIT = 50
+
+
 @mcp.tool()
 def search(query: str, limit: int = 5) -> str:
     """Search the Obsidian vault for notes matching the query."""
+    limit = max(1, min(limit, MAX_LIMIT))
     embedder = build_embedder()
     client = get_client()
     collection = get_collection_name()

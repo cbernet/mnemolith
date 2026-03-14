@@ -1,13 +1,13 @@
-# second-brain
+# mnemolith
 
-Semantic search over an Obsidian vault using RAG, Qdrant, and MCP.
+*Your thoughts, carved in stone.* Semantic search over an Obsidian vault using RAG, Qdrant, and MCP.
 
 ## Architecture
 
 ```text
 Obsidian vault (.md) → Indexing script → Embedding API → Qdrant (Docker)
                                                               ↑
-Claude ← MCP server (second-brain-mcp) ──────────────────────┘
+Claude ← MCP server (mnemolith-mcp) ─────────────────────────┘
 ```
 
 - **Vector DB**: Qdrant in local Docker, persistent volume
@@ -41,10 +41,10 @@ uv run pytest
 
 ```bash
 # Index your vault
-uv run second-brain index /path/to/vault
+uv run mnemolith index /path/to/vault
 
 # Search (for testing outside MCP)
-uv run second-brain search "query text"
+uv run mnemolith search "query text"
 ```
 
 ## Configuration
@@ -77,19 +77,19 @@ Add the following to your MCP configuration:
 ```json
 {
   "mcpServers": {
-    "second-brain": {
+    "mnemolith": {
       "command": "uv",
-      "args": ["run", "--directory", "/absolute/path/to/second-brain", "second-brain-mcp"]
+      "args": ["run", "--directory", "/absolute/path/to/mnemolith", "mnemolith-mcp"]
     }
   }
 }
 ```
 
-Replace `/absolute/path/to/second-brain` with the actual path to this project. Make sure your `.env` file is configured (especially `OPENAI_API_KEY`) and that Qdrant is running.
+Replace `/absolute/path/to/mnemolith` with the actual path to this project. Make sure your `.env` file is configured (especially `OPENAI_API_KEY`) and that Qdrant is running.
 
 The server exposes a `search` tool that Claude can call to find relevant notes in your vault.
 
-See [.mcp.json](./.mcp.json) for an example. 
+See [.mcp.json](./.mcp.json) for an example.
 
 ## Claude Code Plugin
 
@@ -102,7 +102,7 @@ This repo is also a **Claude Code plugin** that bundles:
 
 ```bash
 # From a local clone
-claude plugin install /path/to/second-brain
+claude plugin install /path/to/mnemolith
 ```
 
 The plugin auto-registers the MCP server and the `obsidian-notes` skill. It works from private repos and local clones.
@@ -120,7 +120,7 @@ export OBSIDIAN_VAULT_PATH="$HOME/Obsidian Vault"
 ## Project structure
 
 ```text
-src/second_brain/
+src/mnemolith/
     config.py        # Environment variable handling
     main.py          # CLI entry point (index, search commands)
     parser.py        # Obsidian-aware markdown parser (frontmatter, wiki-links, tags)

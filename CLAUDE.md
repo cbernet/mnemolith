@@ -2,7 +2,7 @@
 
 ## Project
 
-second-brain — Python CLI that indexes an Obsidian vault into Qdrant (vector DB) for semantic search via RAG. Used as backend for an MCP server that gives Claude access to the vault.
+mnemolith — Python CLI that indexes an Obsidian vault into Qdrant (vector DB) for semantic search via RAG. Used as backend for an MCP server that gives Claude access to the vault.
 
 The Obsidian vault path is configured via the `OBSIDIAN_VAULT_PATH` environment variable.
 
@@ -18,7 +18,7 @@ The Obsidian vault path is configured via the `OBSIDIAN_VAULT_PATH` environment 
 ```bash
 uv sync              # install deps
 uv run pytest        # run tests
-uv run second-brain  # run CLI
+uv run mnemolith     # run CLI
 docker compose up -d # start Qdrant
 ```
 
@@ -28,19 +28,19 @@ docker compose up -d # start Qdrant
 - write new unit tests first
 - run the tests to make sure they fail
 - write the code
-- make sure the tests pass by editing the code 
+- make sure the tests pass by editing the code
 - run the tests when you're done editing
 
-When you're working on a new functionality, if existing tests fail, don't modify the tests, modify the code to make sure tests pass. 
+When you're working on a new functionality, if existing tests fail, don't modify the tests, modify the code to make sure tests pass.
 
 Do not overdo tests :
 
 - group tests that can be grouped together
-- don't test trivial things 
+- don't test trivial things
 
 ## Managing our interactions
 
-- feel free to disagree with me (even strongly), I'm not that sensitive and I don't know everything. 
+- feel free to disagree with me (even strongly), I'm not that sensitive and I don't know everything.
 - propose updates to CLAUDE.md based on our discussion, but keep this file simple.
 - propose updates to the README.md
 
@@ -56,7 +56,7 @@ Do not overdo tests :
 
 ## Project structure
 
-- `src/second_brain/` — source code (`config.py` for env var handling)
+- `src/mnemolith/` — source code (`config.py` for env var handling)
 - `tests/` — pytest tests, mirror the src structure
 - `pyproject.toml` — project config, dependencies, CLI entry points
 - `docker-compose.yml` — Qdrant service

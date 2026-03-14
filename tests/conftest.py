@@ -5,7 +5,7 @@ import pytest
 from dotenv import load_dotenv
 from qdrant_client.http.exceptions import ResponseHandlingException
 
-from second_brain.embeddings import MockEmbedder
+from mnemolith.embeddings import MockEmbedder
 
 load_dotenv()
 
@@ -25,7 +25,7 @@ def mock_embedder() -> MockEmbedder:
 
 @pytest.fixture
 def qdrant_collection():
-    from second_brain.qdrant_store import get_client, delete_collection
+    from mnemolith.qdrant_store import get_client, delete_collection
 
     name = f"test_{uuid.uuid4().hex[:8]}"
     try:

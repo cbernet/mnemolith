@@ -1,4 +1,4 @@
-from second_brain.parser import (
+from mnemolith.parser import (
     Document,
     parse_frontmatter,
     extract_links,

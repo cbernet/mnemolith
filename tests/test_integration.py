@@ -1,6 +1,6 @@
 import pytest
 
-from second_brain.indexer import index_vault, search
+from mnemolith.indexer import index_vault, search
 
 
 pytestmark = pytest.mark.integration

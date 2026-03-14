@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "second-brain": {
+    "mnemolith": {
       "command": "uv",
-      "args": ["run", "--directory", "/Users/cbernet/Code/second-brain", "second-brain-mcp"]
+      "args": ["run", "--directory", "/Users/cbernet/Code/mnemolith", "mnemolith-mcp"]
     }
   }
 }

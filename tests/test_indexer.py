@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from second_brain.indexer import index_vault
+from mnemolith.indexer import index_vault
 
 
 def test_index_vault_uses_embed_batch(vault_path, mock_embedder):

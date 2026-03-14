@@ -1,6 +1,6 @@
 from unittest.mock import patch, MagicMock
 
-from second_brain.mcp_server import format_results, search
+from mnemolith.mcp_server import format_results, search
 
 
 def _make_results():
@@ -40,10 +40,10 @@ def test_format_results_empty():
     assert "No results found" in format_results([])
 
 
-@patch("second_brain.mcp_server.indexer_search")
-@patch("second_brain.mcp_server.get_client")
-@patch("second_brain.mcp_server.get_collection_name")
-@patch("second_brain.mcp_server.build_embedder")
+@patch("mnemolith.mcp_server.indexer_search")
+@patch("mnemolith.mcp_server.get_client")
+@patch("mnemolith.mcp_server.get_collection_name")
+@patch("mnemolith.mcp_server.build_embedder")
 def test_search_calls_indexer(mock_embedder, mock_collection, mock_client, mock_search):
     mock_search.return_value = _make_results()
     result = search("test query", 3)

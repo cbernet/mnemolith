@@ -1,8 +1,8 @@
 from qdrant_client import QdrantClient
 
-from second_brain.parser import Document, parse_vault, build_embedding_text, chunk_document
-from second_brain.embeddings import Embedder
-from second_brain.qdrant_store import ensure_collection, upsert_documents, search as qdrant_search
+from mnemolith.parser import Document, parse_vault, build_embedding_text, chunk_document
+from mnemolith.embeddings import Embedder
+from mnemolith.qdrant_store import ensure_collection, upsert_documents, search as qdrant_search
 
 
 def index_vault(

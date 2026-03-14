@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from second_brain.embeddings import MockEmbedder, OpenAIEmbedder
+from mnemolith.embeddings import MockEmbedder, OpenAIEmbedder
 
 
 def test_mock_embedder_dimension():

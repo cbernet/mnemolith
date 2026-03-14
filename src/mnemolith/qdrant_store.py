@@ -1,12 +1,12 @@
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 
-from second_brain.parser import Document
+from mnemolith.parser import Document
 
 
 def get_client(url: str | None = None) -> QdrantClient:
     if url is None:
-        from second_brain.config import get_qdrant_url
+        from mnemolith.config import get_qdrant_url
         url = get_qdrant_url()
     return QdrantClient(url=url)
 
