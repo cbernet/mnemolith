@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/cbernet/mnemolith/actions/workflows/ci.yml"><img src="https://github.com/cbernet/mnemolith/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://codecov.io/gh/cbernet/mnemolith"><img src="https://codecov.io/gh/cbernet/mnemolith/branch/main/graph/badge.svg" alt="codecov"></a>
+  <a href="https://codecov.io/github/cbernet/mnemolith"><img src="https://codecov.io/github/cbernet/mnemolith/graph/badge.svg?token=L573NMBQTD" alt="codecov"></a>
   <a href="https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml"><img src="https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml/badge.svg" alt="Security Review"></a>
 </p> Semantic search over an Obsidian vault using RAG, Qdrant, and MCP.
 
