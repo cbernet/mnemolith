@@ -1,0 +1,130 @@
+<svg width="100%" viewBox="0 0 680 540" xmlns="http://www.w3.org/2000/svg">
+
+<defs>
+  <linearGradient id="aura1" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#7F77DD" stop-opacity="0.2"/>
+    <stop offset="50%" stop-color="#1D9E75" stop-opacity="0.15"/>
+    <stop offset="100%" stop-color="#EF9F27" stop-opacity="0.1"/>
+  </linearGradient>
+  <linearGradient id="aura2" x1="1" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#D4537E" stop-opacity="0.18"/>
+    <stop offset="50%" stop-color="#378ADD" stop-opacity="0.12"/>
+    <stop offset="100%" stop-color="#5DCAA5" stop-opacity="0.08"/>
+  </linearGradient>
+  <linearGradient id="edgeShine" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#AFA9EC" stop-opacity="0.5"/>
+    <stop offset="30%" stop-color="#5DCAA5" stop-opacity="0.3"/>
+    <stop offset="70%" stop-color="#EF9F27" stop-opacity="0.25"/>
+    <stop offset="100%" stop-color="#ED93B1" stop-opacity="0.4"/>
+  </linearGradient>
+  <linearGradient id="topShine" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#7F77DD" stop-opacity="0.35"/>
+    <stop offset="50%" stop-color="#5DCAA5" stop-opacity="0.25"/>
+    <stop offset="100%" stop-color="#EF9F27" stop-opacity="0.3"/>
+  </linearGradient>
+</defs>
+
+<!-- Background aura blobs -->
+<ellipse cx="310" cy="240" rx="140" ry="200" fill="url(#aura1)"/>
+<ellipse cx="370" cy="260" rx="120" ry="190" fill="url(#aura2)"/>
+
+<!-- Ground shadow -->
+<ellipse cx="340" cy="418" rx="140" ry="16" fill="#000" opacity="0.35"/>
+
+<!-- Monolith body -->
+<polygon points="372,60 406,48 406,408 372,418" fill="rgb(5, 5, 16)"/>
+<polygon points="254,72 372,60 406,48 288,60" fill="rgb(20, 20, 40)"/>
+<!-- Top face shine overlay -->
+<polygon points="254,72 372,60 406,48 288,60" fill="url(#topShine)"/>
+<!-- Front face -->
+<polygon points="254,72 372,60 372,418 254,428" fill="rgb(8, 8, 26)"/>
+
+<!-- Edge highlights (prismatic) -->
+<line x1="254" y1="72" x2="254" y2="428" stroke="url(#edgeShine)" stroke-width="1.5"/>
+<line x1="372" y1="60" x2="372" y2="418" stroke="url(#edgeShine)" stroke-width="1"/>
+<line x1="254" y1="72" x2="372" y2="60" stroke="#AFA9EC" stroke-width="0.8" opacity="0.5"/>
+<line x1="372" y1="60" x2="406" y2="48" stroke="#5DCAA5" stroke-width="0.8" opacity="0.4"/>
+
+<!-- Network veins -->
+<!-- Purple cluster (top) -->
+<line x1="288" y1="120" x2="328" y2="165" stroke="#AFA9EC" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+<line x1="288" y1="120" x2="278" y2="180" stroke="#CECBF6" stroke-width="0.8" stroke-linecap="round" opacity="0.43"/>
+<line x1="328" y1="165" x2="355" y2="148" stroke="#7F77DD" stroke-width="0.9" stroke-linecap="round" opacity="0.98"/>
+<line x1="355" y1="148" x2="348" y2="110" stroke="#AFA9EC" stroke-width="0.7" stroke-linecap="round" opacity="0.85"/>
+
+<!-- Teal cluster (mid) -->
+<line x1="278" y1="180" x2="310" y2="240" stroke="#5DCAA5" stroke-width="1.1" stroke-linecap="round" opacity="0.98"/>
+<line x1="328" y1="165" x2="310" y2="240" stroke="#9FE1CB" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+<line x1="328" y1="165" x2="350" y2="220" stroke="#1D9E75" stroke-width="0.8" stroke-linecap="round" opacity="0.85"/>
+<line x1="350" y1="220" x2="310" y2="240" stroke="#5DCAA5" stroke-width="0.9" stroke-linecap="round" opacity="0.43"/>
+<line x1="278" y1="180" x2="270" y2="260" stroke="#9FE1CB" stroke-width="0.7" stroke-linecap="round" opacity="0.6"/>
+
+<!-- Amber cluster (mid-low) -->
+<line x1="310" y1="240" x2="340" y2="305" stroke="#EF9F27" stroke-width="1.2" stroke-linecap="round" opacity="0.43"/>
+<line x1="270" y1="260" x2="300" y2="310" stroke="#FAC775" stroke-width="0.9" stroke-linecap="round" opacity="0.98"/>
+<line x1="350" y1="220" x2="355" y2="290" stroke="#BA7517" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/>
+<line x1="355" y1="290" x2="340" y2="305" stroke="#EF9F27" stroke-width="1" stroke-linecap="round" opacity="0.85"/>
+
+<!-- Pink cluster (bottom) -->
+<line x1="340" y1="305" x2="315" y2="365" stroke="#ED93B1" stroke-width="1.1" stroke-linecap="round" opacity="0.6"/>
+<line x1="340" y1="305" x2="355" y2="375" stroke="#D4537E" stroke-width="0.8" stroke-linecap="round" opacity="0.98"/>
+<line x1="300" y1="310" x2="280" y2="370" stroke="#F4C0D1" stroke-width="0.7" stroke-linecap="round" opacity="0.43"/>
+<line x1="300" y1="310" x2="315" y2="365" stroke="#ED93B1" stroke-width="0.9" stroke-linecap="round" opacity="0.85"/>
+
+<!-- Cross-cluster bridges -->
+<line x1="270" y1="260" x2="340" y2="305" stroke="#85B7EB" stroke-width="0.7" stroke-linecap="round" opacity="0.85"/>
+<line x1="350" y1="220" x2="315" y2="365" stroke="#D85A30" stroke-width="0.6" stroke-linecap="round" opacity="0.43"/>
+
+<!-- Nodes -->
+<!-- Purple nodes -->
+<circle cx="288" cy="120" r="5" fill="#CECBF6" opacity="0.6"/>
+<circle cx="288" cy="120" r="2.5" fill="#EEEDFE"/>
+<circle cx="328" cy="165" r="4.5" fill="#AFA9EC" opacity="0.43"/>
+<circle cx="328" cy="165" r="2" fill="#EEEDFE"/>
+<circle cx="355" cy="148" r="3.5" fill="#7F77DD" opacity="0.98"/>
+<circle cx="355" cy="148" r="1.5" fill="#CECBF6"/>
+<circle cx="348" cy="110" r="3" fill="#AFA9EC" opacity="0.85"/>
+
+<!-- Teal nodes -->
+<circle cx="278" cy="180" r="4" fill="#5DCAA5" opacity="0.98"/>
+<circle cx="278" cy="180" r="2" fill="#E1F5EE"/>
+<circle cx="310" cy="240" r="6" fill="#5DCAA5" opacity="0.6"/>
+<circle cx="310" cy="240" r="3" fill="#E1F5EE"/>
+<circle cx="350" cy="220" r="3.5" fill="#1D9E75" opacity="0.85"/>
+<circle cx="350" cy="220" r="1.5" fill="#9FE1CB"/>
+<circle cx="270" cy="260" r="3" fill="#9FE1CB" opacity="0.43"/>
+
+<!-- Amber nodes -->
+<circle cx="340" cy="305" r="5.5" fill="#EF9F27" opacity="0.43"/>
+<circle cx="340" cy="305" r="2.8" fill="#FAEEDA"/>
+<circle cx="300" cy="310" r="3.5" fill="#FAC775" opacity="0.98"/>
+<circle cx="300" cy="310" r="1.5" fill="#FAEEDA"/>
+<circle cx="355" cy="290" r="3" fill="#BA7517" opacity="0.6"/>
+<circle cx="355" cy="290" r="1.5" fill="#EF9F27"/>
+
+<!-- Pink nodes -->
+<circle cx="315" cy="365" r="4.5" fill="#ED93B1" opacity="0.6"/>
+<circle cx="315" cy="365" r="2" fill="#FBEAF0"/>
+<circle cx="355" cy="375" r="3" fill="#D4537E" opacity="0.98"/>
+<circle cx="355" cy="375" r="1.5" fill="#F4C0D1"/>
+<circle cx="280" cy="370" r="3" fill="#F4C0D1" opacity="0.43"/>
+<circle cx="280" cy="370" r="1.5" fill="#FBEAF0"/>
+
+<!-- Sparkle dots -->
+<circle cx="295" cy="145" r="1.2" fill="#CECBF6" opacity="0.85"/>
+<circle cx="340" cy="130" r="1" fill="#AFA9EC" opacity="0.43"/>
+<circle cx="265" cy="220" r="1.3" fill="#9FE1CB" opacity="0.6"/>
+<circle cx="335" cy="195" r="1" fill="#5DCAA5" opacity="0.98"/>
+<circle cx="360" cy="260" r="1.2" fill="#FAC775" opacity="0.85"/>
+<circle cx="285" cy="290" r="1" fill="#EF9F27" opacity="0.43"/>
+<circle cx="330" cy="345" r="1.3" fill="#ED93B1" opacity="0.6"/>
+<circle cx="295" cy="340" r="1" fill="#D4537E" opacity="0.98"/>
+<circle cx="362" cy="180" r="1" fill="#85B7EB" opacity="0.85"/>
+<circle cx="275" cy="140" r="0.8" fill="#EEEDFE" opacity="0.98"/>
+<circle cx="350" cy="340" r="0.9" fill="#F4C0D1" opacity="0.85"/>
+
+<!-- Logo text -->
+<text x="340" y="472" text-anchor="middle" font-family="'Anthropic Sans', -apple-system, 'system-ui', 'Segoe UI', sans-serif" font-size="38" font-weight="500" letter-spacing="7" fill="rgb(234, 232, 224)">mnemolith</text>
+<text x="340" y="500" text-anchor="middle" font-family="'Anthropic Sans', -apple-system, 'system-ui', 'Segoe UI', sans-serif" font-size="13" font-weight="400" letter-spacing="3" fill="rgb(156, 154, 146)">YOUR THOUGHTS, CARVED IN STONE</text>
+
+</svg>

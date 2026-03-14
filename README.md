@@ -1,10 +1,12 @@
-# mnemolith
+<p align="center">
+  <img src="docs/logo.svg" alt="mnemolith logo" width="400">
+</p>
 
-[![CI](https://github.com/cbernet/mnemolith/actions/workflows/ci.yml/badge.svg)](https://github.com/cbernet/mnemolith/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/cbernet/mnemolith/branch/main/graph/badge.svg)](https://codecov.io/gh/cbernet/mnemolith)
-[![Security Review](https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml/badge.svg)](https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml)
-
-*Your thoughts, carved in stone.* Semantic search over an Obsidian vault using RAG, Qdrant, and MCP.
+<p align="center">
+  <a href="https://github.com/cbernet/mnemolith/actions/workflows/ci.yml"><img src="https://github.com/cbernet/mnemolith/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://codecov.io/gh/cbernet/mnemolith"><img src="https://codecov.io/gh/cbernet/mnemolith/branch/main/graph/badge.svg" alt="codecov"></a>
+  <a href="https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml"><img src="https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml/badge.svg" alt="Security Review"></a>
+</p> Semantic search over an Obsidian vault using RAG, Qdrant, and MCP.
 
 ## Architecture
 
