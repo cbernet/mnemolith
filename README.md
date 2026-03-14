@@ -91,6 +91,32 @@ The server exposes a `search` tool that Claude can call to find relevant notes i
 
 See [.mcp.json](./.mcp.json) for an example. 
 
+## Claude Code Plugin
+
+This repo is also a **Claude Code plugin** that bundles:
+
+- **MCP server** — semantic search over your vault (works in both Claude Code and Claude Desktop)
+- **Obsidian notes skill** — create/edit notes in your vault (Claude Code only)
+
+### Install as a plugin (Claude Code)
+
+```bash
+# From a local clone
+claude plugin install /path/to/second-brain
+```
+
+The plugin auto-registers the MCP server and the `obsidian-notes` skill. It works from private repos and local clones.
+
+> **Note:** Skills are a Claude Code concept — they don't work in Claude Desktop. The MCP server works in both.
+
+### Required environment variable
+
+Set `OBSIDIAN_VAULT_PATH` so the skill and indexer know where your vault is:
+
+```bash
+export OBSIDIAN_VAULT_PATH="$HOME/Obsidian Vault"
+```
+
 ## Project structure
 
 ```text
@@ -112,5 +138,10 @@ tests/
     test_main.py
     test_integration.py
     fixtures/vault/  # Sample markdown notes for testing
+.claude-plugin/
+    plugin.json      # Claude Code plugin manifest
+skills/
+    obsidian-notes/
+        SKILL.md     # Note creation skill for Claude Code
 docker-compose.yml
 ```

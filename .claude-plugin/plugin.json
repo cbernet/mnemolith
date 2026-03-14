@@ -1,0 +1,11 @@
+{
+  "name": "second-brain",
+  "description": "Obsidian vault toolkit: semantic search (MCP) + note creation (skill)",
+  "version": "1.0.0",
+  "mcpServers": {
+    "second-brain": {
+      "command": "uv",
+      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "second-brain-mcp"]
+    }
+  }
+}
