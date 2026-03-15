@@ -17,17 +17,11 @@ claude plugin install /path/to/mnemolith
 
 This auto-registers both the MCP server and the `obsidian-notes` skill. No manual MCP configuration needed.
 
-## Required environment variable
+## Configuration
 
-The plugin needs to know where your vault is:
+The plugin's MCP server reads the `.env` file from the mnemolith project root — the same one used by the CLI. Make sure you've configured it per [Getting Started](getting-started.md#2-configure-environment) before installing the plugin.
 
-```bash
-export OBSIDIAN_VAULT_PATH="$HOME/Obsidian Vault"
-```
-
-Set this in your shell profile (`.zshrc`, `.bashrc`, etc.) so it's always available.
-
-You also need `OPENAI_API_KEY` set for the search functionality and Qdrant running.
+The services (Qdrant, PostgreSQL) must be running (`docker compose up -d`).
 
 ## The obsidian-notes skill
 
