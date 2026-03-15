@@ -16,7 +16,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
 
       - name: Run tests with coverage
-        run: uv run pytest --cov --cov-report=xml
+        run: uv run pytest --cov --cov-report=xml -m "not integration and not pg_integration"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5

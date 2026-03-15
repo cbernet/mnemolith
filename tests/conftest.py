@@ -30,8 +30,8 @@ def mock_embedder() -> MockEmbedder:
 def pg_pool():
     """Create a temporary test database, yield a pool to it, then drop it."""
     db_name = f"mnemolith_test_{uuid.uuid4().hex[:8]}"
-    admin_dsn = get_postgres_dsn()
     try:
+        admin_dsn = get_postgres_dsn()
         admin_conn = psycopg.connect(admin_dsn, autocommit=True)
     except Exception:
         pytest.skip("PostgreSQL not reachable — run: docker compose up -d")
@@ -59,7 +59,7 @@ def qdrant_collection():
     try:
         client = get_client()
         client.get_collections()  # verify connection
-    except ResponseHandlingException:
+    except (ResponseHandlingException, OSError):
         pytest.skip("Qdrant not reachable — run: docker compose up -d")
     yield name, client
     try:
