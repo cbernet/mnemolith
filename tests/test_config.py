@@ -14,11 +14,12 @@ def test_get_vault_path_missing(monkeypatch):
         get_vault_path()
 
 
-def test_get_postgres_dsn_default(monkeypatch):
+def test_get_postgres_dsn_missing(monkeypatch):
     from mnemolith.config import get_postgres_dsn
 
     monkeypatch.delenv("POSTGRES_DSN", raising=False)
-    assert get_postgres_dsn() == "postgresql://mnemolith:mnemolith@localhost:5432/mnemolith"
+    with pytest.raises(EnvironmentError, match="POSTGRES_DSN"):
+        get_postgres_dsn()
 
 
 def test_get_postgres_dsn_custom(monkeypatch):

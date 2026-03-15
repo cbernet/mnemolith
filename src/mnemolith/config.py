@@ -17,18 +17,28 @@ def get_vault_path() -> str:
 
 
 def get_qdrant_url() -> str:
-    return os.environ.get("QDRANT_URL", "http://localhost:6333")
+    url = os.environ.get("QDRANT_URL")
+    if not url:
+        raise EnvironmentError("QDRANT_URL environment variable is not set.")
+    return url
 
 
 def get_collection_name() -> str:
-    return os.environ.get("COLLECTION_NAME", "obsidian")
+    name = os.environ.get("COLLECTION_NAME")
+    if not name:
+        raise EnvironmentError("COLLECTION_NAME environment variable is not set.")
+    return name
 
 
 def get_embedding_provider() -> str:
-    return os.environ.get("EMBEDDING_PROVIDER", "openai")
+    provider = os.environ.get("EMBEDDING_PROVIDER")
+    if not provider:
+        raise EnvironmentError("EMBEDDING_PROVIDER environment variable is not set.")
+    return provider
 
 
 def get_postgres_dsn() -> str:
-    return os.environ.get(
-        "POSTGRES_DSN", "postgresql://mnemolith:mnemolith@localhost:5432/mnemolith"
-    )
+    dsn = os.environ.get("POSTGRES_DSN")
+    if not dsn:
+        raise EnvironmentError("POSTGRES_DSN environment variable is not set.")
+    return dsn
