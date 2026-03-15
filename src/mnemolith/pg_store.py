@@ -1,6 +1,13 @@
+import re
+
 from psycopg_pool import ConnectionPool
 
 from mnemolith.config import get_postgres_dsn
+
+_ALLOWED_DDL = re.compile(
+    r"^\s*(CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE)\b",
+    re.IGNORECASE,
+)
 
 _pool: ConnectionPool | None = None
 
@@ -49,6 +56,10 @@ def describe_table(pool: ConnectionPool, table_name: str) -> list[dict]:
 
 
 def execute_ddl(pool: ConnectionPool, sql: str) -> None:
+    if not _ALLOWED_DDL.match(sql):
+        raise ValueError(
+            "Only CREATE TABLE, ALTER TABLE, and DROP TABLE statements are allowed"
+        )
     with pool.connection() as conn:
         conn.execute(sql)
 

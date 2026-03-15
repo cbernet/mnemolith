@@ -1,4 +1,5 @@
 import pytest
+from psycopg import sql
 
 from mnemolith.pg_store import (
     get_pool,
@@ -26,7 +27,8 @@ def pg_pool():
     tables = list_tables(pool)
     for t in tables:
         if t.startswith("test_"):
-            execute_ddl(pool, f"DROP TABLE IF EXISTS {t} CASCADE")
+            with pool.connection() as conn:
+                conn.execute(sql.SQL("DROP TABLE IF EXISTS {} CASCADE").format(sql.Identifier(t)))
     close_pool()
 
 
