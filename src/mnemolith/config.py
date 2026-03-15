@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
 
@@ -39,6 +40,20 @@ def get_embedding_provider() -> str:
 
 def get_postgres_dsn() -> str:
     dsn = os.environ.get("POSTGRES_DSN")
-    if not dsn:
-        raise EnvironmentError("POSTGRES_DSN environment variable is not set.")
-    return dsn
+    if dsn:
+        return dsn
+    user = os.environ.get("POSTGRES_USER")
+    password = os.environ.get("POSTGRES_PASSWORD")
+    db = os.environ.get("POSTGRES_DB")
+    host = os.environ.get("POSTGRES_HOST", "localhost")
+    port = os.environ.get("POSTGRES_PORT", "5432")
+    if not all([user, password, db]):
+        raise EnvironmentError(
+            "Set either POSTGRES_DSN or POSTGRES_USER + POSTGRES_PASSWORD + POSTGRES_DB."
+        )
+    return f"postgresql://{quote_plus(user)}:{quote_plus(password)}@{host}:{port}/{db}"
+
+
+def get_qdrant_api_key() -> str | None:
+    """Return the Qdrant API key, or None if not set."""
+    return os.environ.get("QDRANT_API_KEY")

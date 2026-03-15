@@ -4,11 +4,14 @@ from qdrant_client.models import Distance, VectorParams, PointStruct
 from mnemolith.parser import Document
 
 
-def get_client(url: str | None = None) -> QdrantClient:
+def get_client(url: str | None = None, api_key: str | None = None) -> QdrantClient:
     if url is None:
         from mnemolith.config import get_qdrant_url
         url = get_qdrant_url()
-    return QdrantClient(url=url)
+    if api_key is None:
+        from mnemolith.config import get_qdrant_api_key
+        api_key = get_qdrant_api_key()
+    return QdrantClient(url=url, api_key=api_key)
 
 
 def ensure_collection(client: QdrantClient, name: str, dimension: int):
