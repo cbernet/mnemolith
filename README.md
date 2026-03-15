@@ -40,7 +40,7 @@ uv run mnemolith search "query"  # search
 - [Getting Started](docs/getting-started.md) — install mnemolith, index, first search
 - [Configuration](docs/configuration.md) — environment variables and options
 - [MCP Setup](docs/mcp-setup.md) — let Claude search your vault (Desktop & Code)
-- [Claude Code Plugin](docs/claude-plugin.md) — plugin install, obsidian-notes skill
+- [Claude Code Plugin](docs/claude-plugin.md) — plugin install, vault search, PostgreSQL, note creation
 - [CLI Reference](docs/cli-reference.md) — all commands and flags
 - [How It Works](docs/how-it-works.md) — architecture, parsing, chunking, embedding
 

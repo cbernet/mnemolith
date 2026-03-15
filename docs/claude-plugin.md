@@ -1,11 +1,12 @@
 # Claude Code Plugin
 
-Mnemolith is also available as a **Claude Code plugin** that bundles:
+Mnemolith is available as a **Claude Code plugin** that gives Claude access to your personal knowledge base. It bundles three capabilities:
 
-- **MCP server** — semantic search over your vault + PostgreSQL tools for structured data
-- **Obsidian notes skill** — lets Claude create and edit notes directly in your vault
+- **Vault search** — ask Claude questions and it searches your Obsidian vault semantically
+- **Structured data** — Claude can create, query, and update PostgreSQL tables for you
+- **Note creation** — Claude can write and edit notes directly in your vault (Claude Code only)
 
-The MCP server works in both Claude Desktop and Claude Code. The skill is Claude Code only.
+The first two work in both Claude Desktop and Claude Code (via the MCP server). Note creation is a Claude Code skill.
 
 ## Install the plugin
 
@@ -23,23 +24,20 @@ The plugin's MCP server reads the `.env` file from the mnemolith project root �
 
 The services (Qdrant, PostgreSQL) must be running (`docker compose up -d`).
 
-## The obsidian-notes skill
+## Searching your vault
 
-Once the plugin is installed, Claude Code can create and edit notes in your vault. You can trigger it naturally:
+Once the plugin is installed, you can ask Claude questions in natural language and it will search your indexed Obsidian notes to answer them:
 
-- "Make a note about this conversation"
-- "Save this to my vault"
-- "Create a note about X"
-- "Update my note on Y"
+- **"What do I know about sourdough fermentation?"** — finds relevant notes
+- **"Summarize my meeting notes from last week"** — searches and synthesizes
+- **"What did I write about project X?"** — recalls your own thinking
+- **"Find my notes related to stoicism"** — semantic search, not just keyword matching
 
-Claude will:
+Claude uses semantic similarity to find matches, so you don't need exact keywords — asking about "bread recipes" can surface a note titled "Weekend baking experiments".
 
-1. Check your vault's folder structure and place the note appropriately
-2. Use proper Obsidian formatting (frontmatter, `[[wiki-links]]`, `#tags`)
-3. Match your language (the vault is bilingual French/English)
-4. Link to related existing notes when relevant
+Results include a relevance score; low-scoring results (below 0.3 by default) are filtered out.
 
-## Using the PostgreSQL backend
+## Structured data with PostgreSQL
 
 The MCP server exposes five PostgreSQL tools that Claude can use on your behalf. You don't need to write SQL — just ask in natural language:
 
@@ -55,14 +53,43 @@ You can also browse your PostgreSQL data directly via CloudBeaver at [http://loc
 
 See [How It Works — PostgreSQL backend](how-it-works.md#postgresql-backend) for the full list of tools and their constraints.
 
+## Creating and editing notes
+
+The `obsidian-notes` skill lets Claude write directly to your vault. You can trigger it naturally:
+
+- **"Make a note about this conversation"** — distills key insights into a vault note
+- **"Save this to my vault"** — persists information from the current session
+- **"Create a note about X"** — writes a new note on a topic
+- **"Update my note on Y"** — edits an existing note
+
+Claude will:
+
+1. Check your vault's folder structure and place the note appropriately
+2. Use proper Obsidian formatting (frontmatter, `[[wiki-links]]`, `#tags`)
+3. Match your language (the vault is bilingual French/English)
+4. Search for related notes and add wiki-links when relevant
+
+## Using both backends together
+
+Claude can bridge both backends in a single conversation. For example, if you track `ASML` in a PostgreSQL `companies` table and have investment research in `Companies/ASML.md`, asking "what's my thesis on ASML?" will pull from both sources automatically.
+
+A good rule of thumb:
+
+| Data type | Backend | Examples |
+|---|---|---|
+| Structured: fields, states, numbers | PostgreSQL | Portfolio holdings, habit tracker, todo list |
+| Unstructured: prose, research, thinking | Obsidian vault | Company research, meeting notes, journal |
+
+For ambiguous queries, Claude checks both.
+
 ## Plugin vs standalone MCP
 
 | Feature | Standalone MCP | Plugin |
 |---|---|---|
-| Semantic search | Yes | Yes |
+| Vault search | Yes | Yes |
 | PostgreSQL tools | Yes | Yes |
 | Note creation/editing | No | Yes (Claude Code only) |
 | Setup | Manual MCP config | `claude plugin install` |
 | Works in Claude Desktop | Yes | MCP part only |
 
-If you only need search, the [standalone MCP setup](mcp-setup.md) is simpler. If you want Claude to also write notes, use the plugin.
+If you only need search and PostgreSQL, the [standalone MCP setup](mcp-setup.md) is simpler. If you want Claude to also write notes, use the plugin.
