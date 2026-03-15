@@ -25,6 +25,8 @@ docker compose up -d # start Qdrant + PostgreSQL
 
 ## test-driven development
 
+CRITICAL: always do the following: 
+
 - start in plan mode when I ask you to do something
 - write new unit tests first
 - run the tests to make sure they fail

@@ -17,6 +17,9 @@ Claude ← MCP server (mnemolith-mcp) ──────────────
                                                               ↓
                                                    PostgreSQL (Docker)
                                                    (structured data)
+                                                         ↑
+                                                   CloudBeaver (Docker)
+                                                   (web UI, port 8978)
 ```
 
 ## Quick start
@@ -26,7 +29,7 @@ git clone https://github.com/cbernet/mnemolith.git
 cd mnemolith
 uv sync                          # install dependencies
 cp .env.example .env             # configure (set OBSIDIAN_VAULT_PATH, OPENAI_API_KEY)
-docker compose up -d             # start Qdrant + PostgreSQL
+docker compose up -d             # start Qdrant, PostgreSQL, CloudBeaver
 uv run mnemolith index           # index your vault
 uv run mnemolith search "query"  # search
 ```
@@ -65,7 +68,7 @@ Resist the urge to add a `notes` table in PG — that's what your vault is for.
 
 ```bash
 uv sync                              # install deps
-docker compose up -d                                     # start Qdrant + PostgreSQL
+docker compose up -d                                     # start Qdrant, PostgreSQL, CloudBeaver
 uv run pytest -m "not integration and not pg_integration" # unit tests only
 uv run pytest                                            # all tests (requires Qdrant + PostgreSQL)
 ```

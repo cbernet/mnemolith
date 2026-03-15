@@ -8,10 +8,18 @@ Mnemolith is configured through environment variables. You can set them in a `.e
 |---|---|---|
 | `OBSIDIAN_VAULT_PATH` | Absolute path to your Obsidian vault | *(required)* |
 | `OPENAI_API_KEY` | OpenAI API key (required when using OpenAI embeddings) | — |
-| `EMBEDDING_PROVIDER` | Embedding provider to use (`openai`) | `openai` |
-| `QDRANT_URL` | Qdrant server URL | `http://localhost:6333` |
-| `COLLECTION_NAME` | Qdrant collection name | `obsidian` |
-| `POSTGRES_DSN` | PostgreSQL connection string | `postgresql://mnemolith:mnemolith@localhost:5432/mnemolith` |
+| `EMBEDDING_PROVIDER` | Embedding provider to use (`openai`) | *(required)* |
+| `QDRANT_URL` | Qdrant server URL | *(required)* |
+| `QDRANT_API_KEY` | Qdrant API key for authentication | *(optional — no auth if unset)* |
+| `COLLECTION_NAME` | Qdrant collection name | *(required)* |
+| `POSTGRES_DSN` | PostgreSQL connection string (overrides component variables below) | — |
+| `POSTGRES_USER` | PostgreSQL user | *(required if no DSN)* |
+| `POSTGRES_PASSWORD` | PostgreSQL password | *(required if no DSN)* |
+| `POSTGRES_DB` | PostgreSQL database name | *(required if no DSN)* |
+| `POSTGRES_HOST` | PostgreSQL host | `localhost` |
+| `POSTGRES_PORT` | PostgreSQL port | `5432` |
+
+The `.env.example` file provides sensible values for local development — copy it to `.env` and fill in your secrets.
 
 ## Vault path
 
@@ -39,7 +47,7 @@ OPENAI_API_KEY=sk-...
 
 ## Qdrant
 
-By default, mnemolith connects to `http://localhost:6333`, which matches the `docker-compose.yml` included in the project.
+The `.env.example` sets `QDRANT_URL=http://localhost:6333`, which matches the `docker-compose.yml` included in the project.
 
 For a remote Qdrant instance:
 
@@ -47,9 +55,15 @@ For a remote Qdrant instance:
 QDRANT_URL=https://your-qdrant-host:6333
 ```
 
+If your Qdrant instance requires authentication, set the API key:
+
+```bash
+QDRANT_API_KEY=your-secret-key
+```
+
 ## Collection name
 
-The default collection name is `obsidian`. Change it if you want to index multiple vaults separately:
+The `.env.example` uses `obsidian`. Change it if you want to index multiple vaults separately:
 
 ```bash
 COLLECTION_NAME=work-vault
@@ -59,9 +73,21 @@ Switching collection names lets you keep separate indexes without conflicts — 
 
 ## PostgreSQL
 
-The PostgreSQL backend stores structured personal data (todo lists, habits, tracking). The default DSN matches the `docker-compose.yml` included in the project.
+The PostgreSQL backend stores structured personal data (todo lists, habits, tracking).
 
-For a custom PostgreSQL instance:
+You can configure it in two ways:
+
+**Option 1 — Component variables** (recommended for local dev, matches docker-compose.yml):
+
+```bash
+POSTGRES_USER=mnemolith
+POSTGRES_PASSWORD=your-password
+POSTGRES_DB=mnemolith
+# POSTGRES_HOST=localhost   # optional, defaults to localhost
+# POSTGRES_PORT=5432        # optional, defaults to 5432
+```
+
+**Option 2 — Direct DSN** (overrides all component variables):
 
 ```bash
 POSTGRES_DSN=postgresql://user:password@host:5432/dbname
@@ -72,8 +98,11 @@ POSTGRES_DSN=postgresql://user:password@host:5432/dbname
 ```bash
 OBSIDIAN_VAULT_PATH=/Users/yourname/Obsidian Vault
 QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=change-me-to-a-strong-secret
 COLLECTION_NAME=obsidian
 EMBEDDING_PROVIDER=openai
 OPENAI_API_KEY=sk-...
-POSTGRES_DSN=postgresql://mnemolith:mnemolith@localhost:5432/mnemolith
+POSTGRES_USER=mnemolith
+POSTGRES_PASSWORD=change-me-to-a-strong-password
+POSTGRES_DB=mnemolith
 ```

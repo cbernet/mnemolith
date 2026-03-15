@@ -47,7 +47,7 @@ uv run mnemolith index ~/Obsidian\ Vault
 Query the indexed vault with natural language.
 
 ```bash
-uv run mnemolith search "your query" [--limit N]
+uv run mnemolith search "your query" [--limit N] [--score-threshold N]
 ```
 
 **Arguments:**
@@ -56,6 +56,7 @@ uv run mnemolith search "your query" [--limit N]
 |---|---|---|
 | `query` | Natural language search query | *(required)* |
 | `--limit` | Maximum number of results (1–50) | `5` |
+| `--score-threshold` | Minimum similarity score (0–1) to include a result | *(none — all results returned)* |
 
 **Example:**
 
@@ -65,6 +66,9 @@ uv run mnemolith search "weekly planning methods"
 
 # Get more results
 uv run mnemolith search "recipes with lentils" --limit 10
+
+# Only results with high relevance
+uv run mnemolith search "weekly planning methods" --score-threshold 0.5
 ```
 
 **Output format:**

@@ -7,7 +7,7 @@ Get from zero to a working semantic search over your Obsidian vault in about 10 
 - An Obsidian vault (see [Obsidian Setup](obsidian-setup.md) if you need one)
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
-- [Docker](https://docs.docker.com/get-docker/) (for Qdrant)
+- [Docker](https://docs.docker.com/get-docker/) (for Qdrant, PostgreSQL, and CloudBeaver)
 - An OpenAI API key
 
 ## 1. Clone and install
@@ -35,13 +35,17 @@ OPENAI_API_KEY=sk-...
 
 See [Configuration](configuration.md) for all available options.
 
-## 3. Start Qdrant
+## 3. Start services
 
 ```bash
 docker compose up -d
 ```
 
-This starts a local Qdrant instance on port 6333 with persistent storage. Your indexed data survives restarts.
+This starts three services with persistent storage (data survives restarts):
+
+- **Qdrant** on port 6333 — vector database for semantic search
+- **PostgreSQL** on port 5432 — structured data (todo lists, habits, tracking)
+- **CloudBeaver** on port 8978 — web UI for browsing PostgreSQL at [http://localhost:8978](http://localhost:8978)
 
 ## 4. Index your vault
 
