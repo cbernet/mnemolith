@@ -41,6 +41,19 @@ uv run mnemolith search "query"  # search
 - [CLI Reference](docs/cli-reference.md) — all commands and flags
 - [How It Works](docs/how-it-works.md) — architecture, parsing, chunking, embedding
 
+## When to use PostgreSQL vs Obsidian
+
+Mnemolith has two backends — use the right one for the job:
+
+| Data type | Where | Example |
+| --- | --- | --- |
+| Structured: fields, states, numbers | PostgreSQL table | Portfolio holdings, habit tracker, todo list |
+| Unstructured: prose, research, thinking | Obsidian note | Company research, meeting notes, journal |
+
+**You don't need foreign keys between them.** Claude bridges both backends at query time. For example, if you track `ASML` in a PG `companies` table and write investment research in `Companies/ASML.md`, asking Claude "what's my thesis on ASML?" will pull from both sources automatically.
+
+Resist the urge to add a `notes` table in PG — that's what your vault is for.
+
 ## Prerequisites
 
 - Python 3.13+
