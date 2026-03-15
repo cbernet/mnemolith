@@ -26,3 +26,9 @@ def get_collection_name() -> str:
 
 def get_embedding_provider() -> str:
     return os.environ.get("EMBEDDING_PROVIDER", "openai")
+
+
+def get_postgres_dsn() -> str:
+    return os.environ.get(
+        "POSTGRES_DSN", "postgresql://mnemolith:mnemolith@localhost:5432/mnemolith"
+    )

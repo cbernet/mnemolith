@@ -13,7 +13,10 @@
 ```text
 Obsidian vault (.md) → Indexing script → Embedding API → Qdrant (Docker)
                                                               ↑
-Claude ← MCP server (mnemolith-mcp) ─────────────────────────┘
+Claude ← MCP server (mnemolith-mcp) ─────────────────────────┤
+                                                              ↓
+                                                   PostgreSQL (Docker)
+                                                   (structured data)
 ```
 
 ## Quick start
@@ -23,7 +26,7 @@ git clone https://github.com/cbernet/mnemolith.git
 cd mnemolith
 uv sync                          # install dependencies
 cp .env.example .env             # configure (set OBSIDIAN_VAULT_PATH, OPENAI_API_KEY)
-docker compose up -d             # start Qdrant
+docker compose up -d             # start Qdrant + PostgreSQL
 uv run mnemolith index           # index your vault
 uv run mnemolith search "query"  # search
 ```
@@ -49,9 +52,9 @@ uv run mnemolith search "query"  # search
 
 ```bash
 uv sync                              # install deps
-docker compose up -d                 # start Qdrant
-uv run pytest -m "not integration"   # unit tests only
-uv run pytest                        # all tests (requires Qdrant)
+docker compose up -d                                     # start Qdrant + PostgreSQL
+uv run pytest -m "not integration and not pg_integration" # unit tests only
+uv run pytest                                            # all tests (requires Qdrant + PostgreSQL)
 ```
 
 ## Project structure
@@ -64,7 +67,8 @@ src/mnemolith/
     embeddings.py    # Embedding provider abstraction (OpenAI)
     indexer.py       # Vault indexing pipeline
     qdrant_store.py  # Qdrant vector store client
-    mcp_server.py    # MCP server exposing search tool to Claude
+    pg_store.py      # PostgreSQL structured data store
+    mcp_server.py    # MCP server exposing search + SQL tools to Claude
 tests/
     fixtures/vault/  # Sample markdown notes for testing
 .claude-plugin/
