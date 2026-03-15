@@ -1,6 +1,14 @@
 from unittest.mock import patch, MagicMock
 
-from mnemolith.mcp_server import format_results, search
+from mnemolith.mcp_server import (
+    format_results,
+    search,
+    pg_list_tables,
+    pg_describe_table,
+    pg_create_table,
+    pg_query,
+    pg_mutate,
+)
 
 
 def _make_results():
@@ -52,3 +60,73 @@ def test_search_calls_indexer(mock_embedder, mock_collection, mock_client, mock_
     assert args[0][0] == "test query"
     assert args[1]["limit"] == 3
     assert "notes/python.md" in result
+
+
+# --- PostgreSQL MCP tools ---
+
+
+@patch("mnemolith.mcp_server.pg_store")
+@patch("mnemolith.mcp_server.get_pool")
+def test_pg_list_tables(mock_get_pool, mock_pg_store):
+    mock_pg_store.list_tables.return_value = ["groceries", "todos"]
+    result = pg_list_tables()
+    assert "groceries" in result
+    assert "todos" in result
+
+
+@patch("mnemolith.mcp_server.pg_store")
+@patch("mnemolith.mcp_server.get_pool")
+def test_pg_list_tables_empty(mock_get_pool, mock_pg_store):
+    mock_pg_store.list_tables.return_value = []
+    result = pg_list_tables()
+    assert "No tables" in result
+
+
+@patch("mnemolith.mcp_server.pg_store")
+@patch("mnemolith.mcp_server.get_pool")
+def test_pg_describe_table(mock_get_pool, mock_pg_store):
+    mock_pg_store.describe_table.return_value = [
+        {"column": "id", "type": "integer", "nullable": "NO"},
+        {"column": "name", "type": "text", "nullable": "YES"},
+    ]
+    result = pg_describe_table("groceries")
+    assert "id" in result
+    assert "integer" in result
+    assert "name" in result
+
+
+@patch("mnemolith.mcp_server.pg_store")
+@patch("mnemolith.mcp_server.get_pool")
+def test_pg_create_table(mock_get_pool, mock_pg_store):
+    result = pg_create_table("CREATE TABLE test (id int)")
+    mock_pg_store.execute_ddl.assert_called_once()
+    assert "OK" in result
+
+
+@patch("mnemolith.mcp_server.pg_store")
+@patch("mnemolith.mcp_server.get_pool")
+def test_pg_query(mock_get_pool, mock_pg_store):
+    mock_pg_store.execute_query.return_value = [
+        {"id": 1, "name": "milk"},
+        {"id": 2, "name": "bread"},
+    ]
+    result = pg_query("SELECT * FROM groceries")
+    assert "milk" in result
+    assert "bread" in result
+
+
+@patch("mnemolith.mcp_server.pg_store")
+@patch("mnemolith.mcp_server.get_pool")
+def test_pg_query_no_results(mock_get_pool, mock_pg_store):
+    mock_pg_store.execute_query.return_value = []
+    result = pg_query("SELECT * FROM groceries")
+    assert "No results" in result
+
+
+@patch("mnemolith.mcp_server.pg_store")
+@patch("mnemolith.mcp_server.get_pool")
+def test_pg_mutate(mock_get_pool, mock_pg_store):
+    mock_pg_store.execute_mutate.return_value = 3
+    result = pg_mutate("DELETE FROM groceries WHERE done = true")
+    assert "3" in result
+    assert "row" in result
