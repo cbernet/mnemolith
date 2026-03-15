@@ -32,6 +32,8 @@ cp .env.example .env             # configure (set OBSIDIAN_VAULT_PATH, OPENAI_AP
 docker compose up -d             # start Qdrant, PostgreSQL, CloudBeaver
 uv run mnemolith index           # index your vault
 uv run mnemolith search "query"  # search
+uv run mnemolith backup          # backup PostgreSQL + Qdrant
+uv run mnemolith restore <path>  # restore from a backup
 ```
 
 ## Documentation
@@ -78,7 +80,8 @@ uv run pytest                                            # all tests (requires Q
 ```text
 src/mnemolith/
     config.py        # Environment variable handling
-    main.py          # CLI entry point (index, search commands)
+    main.py          # CLI entry point (index, search, backup, restore)
+    backup.py        # Backup and restore (pg_dump + Qdrant snapshots)
     parser.py        # Obsidian-aware markdown parser (frontmatter, wiki-links, tags)
     embeddings.py    # Embedding provider abstraction (OpenAI)
     indexer.py       # Vault indexing pipeline

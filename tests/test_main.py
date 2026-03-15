@@ -7,7 +7,7 @@ import httpx
 import pytest
 from qdrant_client.http.exceptions import UnexpectedResponse
 
-from mnemolith.main import cmd_index, cmd_search
+from mnemolith.main import cmd_index, cmd_search, cmd_backup, cmd_restore
 
 
 def test_main_help():
@@ -69,3 +69,46 @@ def test_cmd_search_collection_not_found(mock_search, mock_embedder, mock_client
     with pytest.raises(SystemExit, match="1"):
         cmd_search(args)
     assert "not found" in capsys.readouterr().out.lower()
+
+
+def test_main_help_shows_backup_restore():
+    result = subprocess.run(
+        [sys.executable, "-m", "mnemolith.main", "--help"],
+        capture_output=True,
+        text=True,
+    )
+    assert "backup" in result.stdout
+    assert "restore" in result.stdout
+
+
+@patch("mnemolith.main.create_backup")
+def test_cmd_backup_success(mock_create, tmp_path, capsys):
+    mock_create.return_value = tmp_path / "20260315_120000"
+    args = Namespace(dir=None)
+    cmd_backup(args)
+    output = capsys.readouterr().out
+    assert "20260315_120000" in output
+    mock_create.assert_called_once_with(None)
+
+
+@patch("mnemolith.main.create_backup")
+def test_cmd_backup_custom_dir(mock_create, tmp_path, capsys):
+    mock_create.return_value = tmp_path / "20260315_120000"
+    args = Namespace(dir=str(tmp_path))
+    cmd_backup(args)
+    mock_create.assert_called_once_with(tmp_path)
+
+
+@patch("mnemolith.main.restore_backup")
+def test_cmd_restore_success(mock_restore, tmp_path, capsys):
+    args = Namespace(backup_path=str(tmp_path))
+    cmd_restore(args)
+    output = capsys.readouterr().out
+    assert "Restore complete" in output
+    mock_restore.assert_called_once_with(tmp_path)
+
+
+def test_cmd_restore_invalid_path(capsys):
+    args = Namespace(backup_path="/nonexistent/path")
+    with pytest.raises(SystemExit, match="1"):
+        cmd_restore(args)

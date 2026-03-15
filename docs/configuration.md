@@ -18,6 +18,7 @@ Mnemolith is configured through environment variables. You can set them in a `.e
 | `POSTGRES_DB` | PostgreSQL database name | *(required if no DSN)* |
 | `POSTGRES_HOST` | PostgreSQL host | `localhost` |
 | `POSTGRES_PORT` | PostgreSQL port | `5432` |
+| `BACKUP_DIR` | Directory for backups | `~/.mnemolith/backups/` |
 
 The `.env.example` file provides sensible values for local development — copy it to `.env` and fill in your secrets.
 

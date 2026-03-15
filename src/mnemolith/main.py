@@ -4,6 +4,7 @@ from pathlib import Path
 
 from qdrant_client.http.exceptions import UnexpectedResponse
 
+from mnemolith.backup import create_backup, restore_backup
 from mnemolith.config import get_vault_path, get_collection_name
 from mnemolith.embeddings import build_embedder
 from mnemolith.indexer import index_vault, search
@@ -43,6 +44,21 @@ def cmd_search(args):
         print("\n")
         print(r["content"])
 
+def cmd_backup(args):
+    backup_dir = Path(args.dir) if args.dir else None
+    path = create_backup(backup_dir)
+    print(f"Backup created at: {path}")
+
+
+def cmd_restore(args):
+    path = Path(args.backup_path)
+    if not path.is_dir():
+        print(f"Error: '{path}' is not a valid directory.")
+        sys.exit(1)
+    restore_backup(path)
+    print("Restore complete.")
+
+
 def main():
     parser = argparse.ArgumentParser(prog="mnemolith")
     sub = parser.add_subparsers(dest="command")
@@ -58,6 +74,14 @@ def main():
     search_p.add_argument("--score-threshold", type=float, default=None,
                           help="Minimum similarity score (0-1) to include a result")
     search_p.set_defaults(func=cmd_search)
+
+    backup_p = sub.add_parser("backup", help="Backup PostgreSQL and Qdrant data")
+    backup_p.add_argument("--dir", help="Backup directory (or use BACKUP_DIR env var)")
+    backup_p.set_defaults(func=cmd_backup)
+
+    restore_p = sub.add_parser("restore", help="Restore from a backup directory")
+    restore_p.add_argument("backup_path", help="Path to timestamped backup folder")
+    restore_p.set_defaults(func=cmd_restore)
 
     args = parser.parse_args()
     if not args.command:

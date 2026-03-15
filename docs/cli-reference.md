@@ -1,6 +1,6 @@
 # CLI Reference
 
-Mnemolith provides two commands: `index` and `search`.
+Mnemolith provides four commands: `index`, `search`, `backup`, and `restore`.
 
 ## `mnemolith index`
 
@@ -96,3 +96,68 @@ Each result shows:
 - **Title** — filename without extension
 - **Heading** — the `##` section heading, if the chunk came from a subsection
 - **Content** — the matching text
+
+## `mnemolith backup`
+
+Create a full backup of both PostgreSQL and Qdrant data.
+
+```bash
+uv run mnemolith backup [--dir DIR]
+```
+
+**Arguments:**
+
+| Argument | Description | Default |
+|---|---|---|
+| `--dir` | Directory to store the backup | `BACKUP_DIR` env var, or `~/.mnemolith/backups/` |
+
+**What it does:**
+
+1. Creates a timestamped subfolder (e.g. `20260315_143022/`) inside the backup directory
+2. Runs `pg_dump` inside the Docker PostgreSQL container, saves the output as `pg_dump.sql`
+3. Creates a Qdrant collection snapshot via the API, downloads it as `qdrant_snapshot.snapshot`
+
+**Example:**
+
+```bash
+# Default location (~/.mnemolith/backups/)
+uv run mnemolith backup
+
+# Custom directory
+uv run mnemolith backup --dir ~/my-backups
+```
+
+**Notes:**
+
+- Requires Docker to be running with the PostgreSQL and Qdrant containers up (`docker compose up -d`)
+- Each backup is a self-contained folder with both files — safe to copy, move, or archive
+
+## `mnemolith restore`
+
+Restore both PostgreSQL and Qdrant data from a backup folder.
+
+```bash
+uv run mnemolith restore <backup_path>
+```
+
+**Arguments:**
+
+| Argument | Description | Default |
+|---|---|---|
+| `backup_path` | Path to a timestamped backup folder | *(required)* |
+
+**What it does:**
+
+1. Reads `pg_dump.sql` from the backup folder and pipes it into `psql` inside the Docker container
+2. Uploads `qdrant_snapshot.snapshot` to the Qdrant snapshot restore API
+
+**Example:**
+
+```bash
+uv run mnemolith restore ~/.mnemolith/backups/20260315_143022
+```
+
+**Notes:**
+
+- Restore is destructive — it overwrites existing data in both PostgreSQL and Qdrant
+- Requires Docker to be running with the PostgreSQL and Qdrant containers up
