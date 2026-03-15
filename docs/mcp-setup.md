@@ -7,12 +7,17 @@ Mnemolith includes an MCP (Model Context Protocol) server that lets Claude searc
 Before setting up the MCP server, make sure you have:
 
 - Indexed your vault (`uv run mnemolith index`) — see [Getting Started](getting-started.md)
-- Qdrant running (`docker compose up -d`)
+- Qdrant and PostgreSQL running (`docker compose up -d`)
 - Your `.env` configured with `OPENAI_API_KEY`
 
 ## How it works
 
-The MCP server exposes a `search` tool to Claude. When Claude needs information from your notes, it calls this tool with a natural language query and gets back the most semantically relevant chunks from your vault.
+The MCP server exposes two sets of tools to Claude:
+
+- **search** — semantic search over your Obsidian vault (unstructured notes, journals, ideas)
+- **pg_list_tables, pg_describe_table, pg_create_table, pg_query, pg_mutate** — SQL access to a PostgreSQL database for structured personal data (todo lists, habit tracking, etc.)
+
+Claude decides which backend to use based on the query. For ambiguous requests, it can check both.
 
 ## Setup for Claude Desktop
 

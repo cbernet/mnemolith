@@ -7,7 +7,10 @@ This page explains mnemolith's internals: how your Obsidian notes go from markdo
 ```
 Obsidian vault (.md) → Parser → Chunker → Embedder → Qdrant
                                                         ↑
-Claude ← MCP server ───────────────────────────────────┘
+Claude ← MCP server ───────────────────────────────────┤
+                                                        ↓
+                                                   PostgreSQL
+                                                   (structured data)
 ```
 
 ## Parsing
@@ -87,3 +90,17 @@ When you search (via CLI or MCP):
 3. Results are returned with their payload and similarity score
 
 The MCP server wraps this in a tool that Claude can call, so Claude can search your vault mid-conversation without you having to run CLI commands.
+
+## PostgreSQL backend
+
+Alongside the vector store for unstructured notes, mnemolith provides a PostgreSQL backend for structured personal data — things like todo lists, habit tracking, or any tabular information.
+
+The MCP server exposes five PostgreSQL tools:
+
+- **pg_list_tables** — discover available tables
+- **pg_describe_table** — inspect a table's columns and types
+- **pg_create_table** — execute DDL (CREATE/ALTER/DROP TABLE only — other statements are rejected for safety)
+- **pg_query** — run read-only SELECT queries
+- **pg_mutate** — run INSERT/UPDATE/DELETE statements
+
+Claude can use these tools to create tables, insert data, and query structured information on your behalf. The DDL tool is restricted to table-level operations to prevent dangerous statements like `DROP DATABASE` or `COPY ... TO PROGRAM`.

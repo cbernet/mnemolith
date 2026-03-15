@@ -45,7 +45,7 @@ uv run mnemolith search "query"  # search
 
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/)
-- Docker (for Qdrant)
+- Docker (for Qdrant and PostgreSQL)
 - An OpenAI API key
 
 ## Development

@@ -11,6 +11,7 @@ Mnemolith is configured through environment variables. You can set them in a `.e
 | `EMBEDDING_PROVIDER` | Embedding provider to use (`openai`) | `openai` |
 | `QDRANT_URL` | Qdrant server URL | `http://localhost:6333` |
 | `COLLECTION_NAME` | Qdrant collection name | `obsidian` |
+| `POSTGRES_DSN` | PostgreSQL connection string | `postgresql://mnemolith:mnemolith@localhost:5432/mnemolith` |
 
 ## Vault path
 
@@ -56,6 +57,16 @@ COLLECTION_NAME=work-vault
 
 Switching collection names lets you keep separate indexes without conflicts — each `mnemolith index` run writes to the configured collection.
 
+## PostgreSQL
+
+The PostgreSQL backend stores structured personal data (todo lists, habits, tracking). The default DSN matches the `docker-compose.yml` included in the project.
+
+For a custom PostgreSQL instance:
+
+```bash
+POSTGRES_DSN=postgresql://user:password@host:5432/dbname
+```
+
 ## Example `.env` file
 
 ```bash
@@ -64,4 +75,5 @@ QDRANT_URL=http://localhost:6333
 COLLECTION_NAME=obsidian
 EMBEDDING_PROVIDER=openai
 OPENAI_API_KEY=sk-...
+POSTGRES_DSN=postgresql://mnemolith:mnemolith@localhost:5432/mnemolith
 ```

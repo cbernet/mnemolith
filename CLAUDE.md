@@ -2,7 +2,7 @@
 
 ## Project
 
-mnemolith — Python CLI that indexes an Obsidian vault into Qdrant (vector DB) for semantic search via RAG. Used as backend for an MCP server that gives Claude access to the vault.
+mnemolith — Python CLI that indexes an Obsidian vault into Qdrant (vector DB) for semantic search via RAG. Also provides a PostgreSQL backend for structured personal data (todo lists, habits, tracking). Used as backend for an MCP server that gives Claude access to both.
 
 The Obsidian vault path is configured via the `OBSIDIAN_VAULT_PATH` environment variable.
 
@@ -10,6 +10,7 @@ The Obsidian vault path is configured via the `OBSIDIAN_VAULT_PATH` environment 
 
 - Python 3.13, managed with uv
 - Qdrant (Docker) for vector storage
+- PostgreSQL (Docker) for structured data (todo lists, habits, tracking)
 - Embedding providers: OpenAI, Cohere
 - pytest for tests
 
@@ -19,7 +20,7 @@ The Obsidian vault path is configured via the `OBSIDIAN_VAULT_PATH` environment 
 uv sync              # install deps
 uv run pytest        # run tests
 uv run mnemolith     # run CLI
-docker compose up -d # start Qdrant
+docker compose up -d # start Qdrant + PostgreSQL
 ```
 
 ## test-driven development
@@ -63,7 +64,7 @@ However :
 - `src/mnemolith/` — source code (`config.py` for env var handling)
 - `tests/` — pytest tests, mirror the src structure
 - `pyproject.toml` — project config, dependencies, CLI entry points
-- `docker-compose.yml` — Qdrant service
+- `docker-compose.yml` — Qdrant + PostgreSQL services
 
 ## Key decisions
 
