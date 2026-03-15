@@ -56,11 +56,13 @@ def search(
     collection: str,
     query_vector: list[float],
     limit: int = 5,
+    score_threshold: float | None = None,
 ) -> list[dict]:
     results = client.query_points(
         collection_name=collection,
         query=query_vector,
         limit=limit,
+        score_threshold=score_threshold,
     )
     return [
         {**hit.payload, "score": hit.score}

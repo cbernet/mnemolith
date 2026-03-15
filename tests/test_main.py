@@ -44,7 +44,7 @@ def test_cmd_search_success(mock_search, mock_embedder, mock_client, capsys):
     mock_search.return_value = [
         {"score": 0.9, "path": "note.md", "title": "Note", "heading": "Intro", "content": "Hello"},
     ]
-    args = Namespace(query="test", limit=5)
+    args = Namespace(query="test", limit=5, score_threshold=None)
     cmd_search(args)
     output = capsys.readouterr().out
     assert "note.md" in output
@@ -62,7 +62,7 @@ def test_cmd_search_collection_not_found(mock_search, mock_embedder, mock_client
         content=b"",
         headers=httpx.Headers(),
     )
-    args = Namespace(query="test", limit=5)
+    args = Namespace(query="test", limit=5, score_threshold=None)
     with pytest.raises(SystemExit, match="1"):
         cmd_search(args)
     assert "not found" in capsys.readouterr().out.lower()

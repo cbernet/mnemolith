@@ -36,7 +36,7 @@ MAX_LIMIT = 50
 
 
 @mcp.tool()
-def search(query: str, limit: int = 5) -> str:
+def search(query: str, limit: int = 5, score_threshold: float = 0.3) -> str:
     """Search the user's Obsidian vault for notes using semantic search.
 
     Use this for unstructured personal knowledge: notes, ideas, daily journals,
@@ -47,7 +47,7 @@ def search(query: str, limit: int = 5) -> str:
     embedder = build_embedder()
     client = get_client()
     collection = get_collection_name()
-    results = indexer_search(query, embedder, client, collection, limit=limit)
+    results = indexer_search(query, embedder, client, collection, limit=limit, score_threshold=score_threshold)
     return format_results(results)
 
 

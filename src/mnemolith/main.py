@@ -29,7 +29,7 @@ def cmd_search(args):
     collection = get_collection_name()
     limit = max(1, min(args.limit, MAX_LIMIT))
     try:
-        results = search(args.query, embedder, client, collection, limit=limit)
+        results = search(args.query, embedder, client, collection, limit=limit, score_threshold=args.score_threshold)
     except UnexpectedResponse as e:
         if e.status_code == 404:
             print(f"Collection '{collection}' not found. Run 'mnemolith index' first.")
@@ -55,6 +55,8 @@ def main():
     search_p.add_argument("query", help="Search query")
     search_p.add_argument("--limit", type=int, default=5,
                           help=f"Max results (1-{MAX_LIMIT})")
+    search_p.add_argument("--score-threshold", type=float, default=None,
+                          help="Minimum similarity score (0-1) to include a result")
     search_p.set_defaults(func=cmd_search)
 
     args = parser.parse_args()

@@ -33,6 +33,7 @@ def search(
     client: QdrantClient,
     collection: str,
     limit: int = 5,
+    score_threshold: float | None = None,
 ) -> list[dict]:
     query_vector = embedder.embed(query)
-    return qdrant_search(client, collection, query_vector, limit=limit)
+    return qdrant_search(client, collection, query_vector, limit=limit, score_threshold=score_threshold)
