@@ -1,10 +1,13 @@
 import uuid
 from pathlib import Path
 
+import psycopg
 import pytest
 from dotenv import load_dotenv
+from psycopg_pool import ConnectionPool
 from qdrant_client.http.exceptions import ResponseHandlingException
 
+from mnemolith.config import get_postgres_dsn
 from mnemolith.embeddings import MockEmbedder
 
 load_dotenv()
@@ -21,6 +24,31 @@ def vault_path() -> str:
 @pytest.fixture
 def mock_embedder() -> MockEmbedder:
     return MockEmbedder(dimension=384)
+
+
+@pytest.fixture
+def pg_pool():
+    """Create a temporary test database, yield a pool to it, then drop it."""
+    db_name = f"mnemolith_test_{uuid.uuid4().hex[:8]}"
+    admin_dsn = get_postgres_dsn()
+    try:
+        admin_conn = psycopg.connect(admin_dsn, autocommit=True)
+    except Exception:
+        pytest.skip("PostgreSQL not reachable — run: docker compose up -d")
+    admin_conn.execute(f"CREATE DATABASE {db_name}")
+    admin_conn.close()
+
+    # Build DSN for the test database
+    # Replace the database name in the DSN (last path component)
+    test_dsn = admin_dsn.rsplit("/", 1)[0] + f"/{db_name}"
+    pool = ConnectionPool(test_dsn, open=True)
+    yield pool
+    pool.close()
+
+    # Drop the test database
+    admin_conn = psycopg.connect(admin_dsn, autocommit=True)
+    admin_conn.execute(f"DROP DATABASE {db_name}")
+    admin_conn.close()
 
 
 @pytest.fixture

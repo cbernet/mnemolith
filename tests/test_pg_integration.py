@@ -1,9 +1,6 @@
 import pytest
-from psycopg import sql
 
 from mnemolith.pg_store import (
-    get_pool,
-    close_pool,
     list_tables,
     describe_table,
     execute_ddl,
@@ -12,24 +9,6 @@ from mnemolith.pg_store import (
 )
 
 pytestmark = pytest.mark.pg_integration
-
-
-@pytest.fixture
-def pg_pool():
-    try:
-        pool = get_pool()
-        with pool.connection() as conn:
-            conn.execute("SELECT 1")
-    except Exception:
-        pytest.skip("PostgreSQL not reachable — run: docker compose up -d")
-    yield pool
-    # cleanup: only drop tables created during tests
-    tables = list_tables(pool)
-    for t in tables:
-        if t.startswith("test_"):
-            with pool.connection() as conn:
-                conn.execute(sql.SQL("DROP TABLE IF EXISTS {} CASCADE").format(sql.Identifier(t)))
-    close_pool()
 
 
 def test_create_and_list_table(pg_pool):
