@@ -6,9 +6,17 @@
   <a href="https://github.com/cbernet/mnemolith/actions/workflows/ci.yml"><img src="https://github.com/cbernet/mnemolith/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://codecov.io/github/cbernet/mnemolith"><img src="https://codecov.io/github/cbernet/mnemolith/graph/badge.svg?token=L573NMBQTD" alt="codecov"></a>
   <a href="https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml"><img src="https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml/badge.svg" alt="Security Review"></a>
-</p> Semantic search over an Obsidian vault using RAG, Qdrant, and MCP.
+</p>
 
-## Architecture
+<p align="center"><em>Your personal knowledge base, searchable by AI.</em></p>
+
+Mnemolith turns your [Obsidian](https://obsidian.md) vault into a semantic search engine and pairs it with a PostgreSQL database for structured data. Together, they form a unified personal knowledge base that Claude can query through [MCP](https://modelcontextprotocol.io).
+
+- **Save your conversations as notes** - simply ask Claude to save the discussion as a note to your vault. 
+- **Semantic search** — index your markdown notes into [Qdrant](https://qdrant.tech) and find them by meaning, not just keywords.
+- **Structured data** — store todo lists, habit trackers, portfolios, and anything tabular in PostgreSQL. Just tell Claude what you want and it will create the necessary tables in Mnemolith. 
+- **MCP integration** — Claude (Desktop or Code) searches both backends in a single conversation, bridging prose and data automatically.
+- **You own everything** — notes stay as plain markdown files, data lives in a local Postgres you can inspect with CloudBeaver, and backups are a single CLI command.
 
 ```text
 Obsidian vault (.md) → Indexing script → Embedding API → Qdrant (Docker)
@@ -22,27 +30,12 @@ Claude ← MCP server (mnemolith-mcp) ──────────────
                                                    (web UI, port 8978)
 ```
 
-## Quick start
-
-```bash
-git clone https://github.com/cbernet/mnemolith.git
-cd mnemolith
-uv sync                          # install dependencies
-cp .env.example .env             # configure (set OBSIDIAN_VAULT_PATH, OPENAI_API_KEY)
-docker compose up -d             # start Qdrant, PostgreSQL, CloudBeaver
-uv run mnemolith index           # index your vault
-uv run mnemolith search "query"  # search
-uv run mnemolith backup          # backup PostgreSQL + Qdrant
-uv run mnemolith restore <path>  # restore from a backup
-```
-
 ## Documentation
 
 - [Obsidian Setup](docs/obsidian-setup.md) — install Obsidian, set up Git backup
 - [Getting Started](docs/getting-started.md) — install mnemolith, index, first search
 - [Configuration](docs/configuration.md) — environment variables and options
-- [MCP Setup](docs/mcp-setup.md) — let Claude search your vault (Desktop & Code)
-- [Claude Code Plugin](docs/claude-plugin.md) — plugin install, vault search, PostgreSQL, note creation
+- [Claude Integration](docs/claude-plugin.md) — MCP setup (Desktop & Code), plugin install, vault search, PostgreSQL, note creation
 - [CLI Reference](docs/cli-reference.md) — all commands and flags
 - [How It Works](docs/how-it-works.md) — architecture, parsing, chunking, embedding
 

@@ -1,12 +1,17 @@
-# Claude Code Plugin
+# Claude Integration
 
-Mnemolith is available as a **Claude Code plugin** that gives Claude access to your personal knowledge base. It bundles three capabilities:
+Mnemolith gives Claude access to your personal knowledge base through an MCP server. There are two ways to set it up:
 
-- **Vault search** — ask Claude questions and it searches your Obsidian vault semantically
-- **Structured data** — Claude can create, query, and update PostgreSQL tables for you
-- **Note creation** — Claude can write and edit notes directly in your vault (Claude Code only)
+| | Standalone MCP | Claude Code Plugin |
+|---|---|---|
+| Vault search | Yes | Yes |
+| PostgreSQL tools | Yes | Yes |
+| Note creation/editing | No | Yes |
+| Works in Claude Desktop | Yes | No |
+| Works in Claude Code | Yes | Yes |
+| Setup | Manual MCP config | `claude plugin install` |
 
-The first two work in both Claude Desktop and Claude Code (via the MCP server). Note creation is a Claude Code skill.
+The **standalone MCP** setup works with both Claude Desktop and Claude Code. The **Claude Code plugin** wraps the same MCP server and adds the `obsidian-notes` skill for writing notes directly to your vault.
 
 ## Install the plugin
 
@@ -93,14 +98,61 @@ A good rule of thumb:
 
 For ambiguous queries, Claude checks both.
 
-## Plugin vs standalone MCP
+## Standalone MCP setup
 
-| Feature | Standalone MCP | Plugin |
-|---|---|---|
-| Vault search | Yes | Yes |
-| PostgreSQL tools | Yes | Yes |
-| Note creation/editing | No | Yes (Claude Code only) |
-| Setup | Manual MCP config | `claude plugin install` |
-| Works in Claude Desktop | Yes | MCP part only |
+If you don't need note creation, or if you use Claude Desktop, you can configure the MCP server directly without the plugin.
 
-If you only need search and PostgreSQL, the [standalone MCP setup](mcp-setup.md) is simpler. If you want Claude to also write notes, use the plugin.
+### Claude Desktop
+
+Add the following to your MCP configuration file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "mnemolith": {
+      "command": "uv",
+      "args": ["run", "--directory", "/absolute/path/to/mnemolith", "mnemolith-mcp"]
+    }
+  }
+}
+```
+
+Replace `/absolute/path/to/mnemolith` with the actual path to your mnemolith clone. Restart Claude Desktop after editing the config.
+
+### Claude Code
+
+```bash
+claude mcp add mnemolith -- uv run --directory /absolute/path/to/mnemolith mnemolith-mcp
+```
+
+Or manually create/edit `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "mnemolith": {
+      "command": "uv",
+      "args": ["run", "--directory", "/absolute/path/to/mnemolith", "mnemolith-mcp"]
+    }
+  }
+}
+```
+
+### Verifying it works
+
+Ask Claude something about your notes. In Claude Code, you can also check that the server is registered:
+
+```bash
+claude mcp list
+```
+
+## Troubleshooting
+
+**"Collection not found" error** — you haven't indexed your vault yet. Run `uv run mnemolith index`.
+
+**Server not appearing in Claude** — check that the path in your MCP config is absolute, make sure `uv` is in your PATH, and restart Claude after config changes.
+
+**Search returns no results** — verify Qdrant is running (`curl http://localhost:6333`), re-index after adding new notes, and try different query phrasing.

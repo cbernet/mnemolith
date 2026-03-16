@@ -71,6 +71,5 @@ Results are ranked by semantic similarity, with scores, file paths, and matching
 
 ## What's next?
 
-- [MCP Setup](mcp-setup.md) — let Claude search your vault directly
-- [Claude Code Plugin](claude-plugin.md) — install mnemolith as a Claude Code plugin for search + note creation
+- [Claude Integration](claude-plugin.md) — give Claude access to your vault (MCP setup, plugin install, note creation)
 - [CLI Reference](cli-reference.md) — all commands and options
