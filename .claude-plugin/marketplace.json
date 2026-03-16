@@ -1,0 +1,15 @@
+{
+  "name": "mnemolith",
+  "description": "Mnemolith plugin marketplace",
+  "owner": {
+    "name": "Colin Bernet"
+  },
+  "plugins": [
+    {
+      "name": "mnemolith",
+      "description": "Obsidian vault toolkit: semantic search (MCP) + note creation (skill)",
+      "version": "1.0.0",
+      "source": "./"
+    }
+  ]
+}

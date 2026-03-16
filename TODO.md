@@ -13,6 +13,7 @@
 - [ ] On index: detect new, modified, deleted files vs existing Qdrant state
 - [ ] Only embed and upsert changed files, delete vectors for removed files
 - [ ] `mnemolith index` incremental by default, `--full` flag for full rebuild
+- [ ] make sure vectors corresponding to deleted notes are removed
 
 ## RAG Improvements
 

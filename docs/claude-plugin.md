@@ -10,13 +10,24 @@ The first two work in both Claude Desktop and Claude Code (via the MCP server). 
 
 ## Install the plugin
 
-From a local clone:
+**For development** (per-session, no install needed):
 
 ```bash
-claude plugin install /path/to/mnemolith
+claude --plugin-dir /path/to/mnemolith
 ```
 
-This auto-registers both the MCP server and the `obsidian-notes` skill. No manual MCP configuration needed.
+Use `/reload-plugins` inside the session to pick up changes without restarting.
+
+**For persistent install**, register the repo as a marketplace first, then install:
+
+```bash
+claude plugin marketplace add /path/to/mnemolith
+claude plugin install mnemolith@mnemolith
+```
+
+Or interactively: inside a Claude Code session, run `/plugin`, go to the **Discover** tab, and install from there.
+
+Both methods auto-register the MCP server and the `obsidian-notes` skill. No manual MCP configuration needed.
 
 ## Configuration
 

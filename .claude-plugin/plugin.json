@@ -1,6 +1,6 @@
 {
   "name": "mnemolith",
-  "description": "Obsidian vault toolkit: semantic search (MCP) + note creation (skill)",
+  "description": "Work with user data (unstructured: obsidian, structured: postgresql). MCP + note creation skill",
   "version": "1.0.0",
   "mcpServers": {
     "mnemolith": {
