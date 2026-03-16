@@ -1,3 +1,5 @@
+import logging
+
 from mcp.server.fastmcp import FastMCP
 
 from mnemolith import pg_store
@@ -6,6 +8,13 @@ from mnemolith.embeddings import build_embedder
 from mnemolith.indexer import search as indexer_search
 from mnemolith.pg_store import get_pool, close_pool
 from mnemolith.qdrant_store import get_client
+
+logging.basicConfig(
+    filename="/tmp/mnemolith-mcp.log",
+    level=logging.ERROR,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+logger = logging.getLogger("mnemolith")
 
 mcp = FastMCP(
     "mnemolith",
