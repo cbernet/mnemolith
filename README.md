@@ -91,6 +91,10 @@ skills/
 docs/                # User documentation
 ```
 
+## Roadmap
+
+- See [TODO](TODO.md)
+
 ## License
 
 MIT
