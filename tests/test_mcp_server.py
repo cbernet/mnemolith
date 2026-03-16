@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 from mnemolith.mcp_server import (
     format_results,
     search,
+    vault_path,
     pg_list_tables,
     pg_describe_table,
     pg_create_table,
@@ -60,6 +61,12 @@ def test_search_calls_indexer(mock_embedder, mock_collection, mock_client, mock_
     assert args[0][0] == "test query"
     assert args[1]["limit"] == 3
     assert "notes/python.md" in result
+
+
+@patch("mnemolith.mcp_server.get_vault_path", return_value="/home/user/obsidian")
+def test_vault_path(mock_get_vault):
+    result = vault_path()
+    assert "/home/user/obsidian" in result
 
 
 # --- PostgreSQL MCP tools ---

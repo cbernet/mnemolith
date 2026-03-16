@@ -3,7 +3,7 @@ import logging
 from mcp.server.fastmcp import FastMCP
 
 from mnemolith import pg_store
-from mnemolith.config import get_collection_name
+from mnemolith.config import get_collection_name, get_vault_path
 from mnemolith.embeddings import build_embedder
 from mnemolith.indexer import search as indexer_search
 from mnemolith.pg_store import get_pool, close_pool
@@ -42,6 +42,16 @@ def format_results(results: list[dict]) -> str:
 
 
 MAX_LIMIT = 50
+
+
+@mcp.tool()
+def vault_path() -> str:
+    """Return the absolute path to the user's Obsidian vault.
+
+    Use this to construct full file paths when you need to read a specific
+    note from the vault (e.g. via the Read tool).
+    """
+    return get_vault_path()
 
 
 @mcp.tool()
