@@ -32,7 +32,7 @@ def test_cmd_index_invalid_path(tmp_path):
 @patch("mnemolith.main.build_embedder")
 @patch("mnemolith.main.index_vault", return_value=["c1", "c2", "c3"])
 def test_cmd_index_success(mock_index, mock_embedder, mock_client, mock_collection, tmp_path, capsys):
-    args = Namespace(vault_path=str(tmp_path))
+    args = Namespace(vault_path=str(tmp_path), clean=False)
     cmd_index(args)
     assert "Indexed 3 chunks" in capsys.readouterr().out
     mock_index.assert_called_once()
