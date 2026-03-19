@@ -34,6 +34,12 @@ Or interactively: inside a Claude Code session, run `/plugin`, go to the **Disco
 
 Both methods auto-register the MCP server and the `obsidian-notes` skill. No manual MCP configuration needed.
 
+To update to the last version of the plugin later on:
+
+```bash
+claude plugin update mnemolith@mnemolith
+```
+
 ## Configuration
 
 The plugin's MCP server reads the `.env` file from the mnemolith project root — the same one used by the CLI. Make sure you've configured it per [Getting Started](getting-started.md#2-configure-environment) before installing the plugin.

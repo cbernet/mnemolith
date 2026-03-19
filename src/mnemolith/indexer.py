@@ -2,7 +2,7 @@ from qdrant_client import QdrantClient
 
 from mnemolith.parser import Document, parse_vault, build_embedding_text, chunk_document
 from mnemolith.embeddings import Embedder
-from mnemolith.qdrant_store import ensure_collection, upsert_documents, search as qdrant_search
+from mnemolith.qdrant_store import ensure_collection, delete_collection, upsert_documents, search as qdrant_search
 
 
 def index_vault(
@@ -10,6 +10,7 @@ def index_vault(
     embedder: Embedder,
     client: QdrantClient,
     collection: str,
+    clean: bool = False,
 ) -> list[Document]:
     documents = parse_vault(vault_path)
     if not documents:
@@ -19,6 +20,8 @@ def index_vault(
     for doc in documents:
         chunks.extend(chunk_document(doc))
 
+    if clean:
+        delete_collection(client, collection)
     ensure_collection(client, collection, embedder.dimension)
     texts = [build_embedding_text(chunk) for chunk in chunks]
     print(f"Embedding {len(texts)} chunks...")

@@ -20,7 +20,7 @@ def cmd_index(args):
         sys.exit(1)
     embedder = build_embedder()
     client = get_client()
-    chunks = index_vault(vault_path, embedder, client, get_collection_name())
+    chunks = index_vault(vault_path, embedder, client, get_collection_name(), clean=args.clean)
     print(f"Indexed {len(chunks)} chunks.")
 
 
@@ -65,6 +65,7 @@ def main():
 
     index_p = sub.add_parser("index", help="Index vault into Qdrant")
     index_p.add_argument("vault_path", nargs="?", help="Path to vault (or use OBSIDIAN_VAULT_PATH)")
+    index_p.add_argument("--clean", action="store_true", help="Delete and recreate the collection before indexing")
     index_p.set_defaults(func=cmd_index)
 
     search_p = sub.add_parser("search", help="Search indexed documents")
