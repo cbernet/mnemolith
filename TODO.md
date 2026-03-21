@@ -17,9 +17,9 @@
 
 ## Maintenance
 
+- [x] back up procedure test
 - [ ] separate docker compose stack for integration tests
-- [ ] cronjobs for backups
-- [ ] keep track of n backups 
+- [x] cronjobs for backups
 
 ## RAG Improvements
 

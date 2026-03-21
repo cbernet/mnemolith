@@ -59,11 +59,11 @@ A daily backup is a good default. Add a cron job:
 crontab -e
 ```
 
-Add this line (runs daily at 2 AM):
+Add this line (runs daily at 3pm):
 
 ```cron
 PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin
-0 2 * * * cd /path/to/mnemolith && /path/to/uv run mnemolith backup >> /tmp/mnemolith-backup.log 2>&1
+0 15 * * * cd /path/to/mnemolith && /path/to/uv run mnemolith backup >> /tmp/mnemolith-backup.log 2>&1
 ```
 
 - The `PATH` specification is needed so that cron can find docker, which is needed for the backup

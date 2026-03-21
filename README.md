@@ -8,13 +8,21 @@
   <a href="https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml"><img src="https://github.com/cbernet/mnemolith/actions/workflows/security-review.yml/badge.svg" alt="Security Review"></a>
 </p>
 
-<p align="center"><em>Your personal knowledge base, searchable by AI.</em></p>
+<p align="center"><em>Your knowledge base. Shared with your AI. Owned by you.</em></p>
 
-Mnemolith turns your [Obsidian](https://obsidian.md) vault into a semantic search engine and pairs it with a PostgreSQL database for structured data. Together, they form a unified personal knowledge base that Claude can query through [MCP](https://modelcontextprotocol.io).
+## Why mnemolith?
 
-- **Save your conversations as notes** - simply ask Claude to save the discussion as a note to your vault. 
+Every insight you build with an AI assistant — research, decisions, context about your life and work — lives in a chat history. It stays frozen there: you can scroll back and search, but you can't edit it, restructure it, or correct it. And if you switch providers, you start from zero.
+
+**Mnemolith turns conversations into knowledge you actually own.**
+
+Ask Claude to save a discussion as a note and it becomes a plain markdown file in your Obsidian vault — something you can read, edit, reorganize, and link to other notes. You and Claude share the same knowledge base. You write notes, Claude reads them. Claude writes notes, you read them. When you ask Claude a question, you know exactly where the answer came from.
+
+This is what working *with* your AI looks like.
+
 - **Semantic search** — index your markdown notes into a vector database and find them by meaning, not just keywords. Choose between [pgvector](https://github.com/pgvector/pgvector) (simpler, one database for everything) and [Qdrant](https://qdrant.tech) (dedicated vector DB).
-- **Structured data** — store todo lists, habit trackers, portfolios, and anything tabular in PostgreSQL. Just tell Claude what you want and it will create the necessary tables in Mnemolith. 
+- **Structured data** — store todo lists, habit trackers, portfolios, and anything tabular in PostgreSQL. Just tell Claude what you want and it will create the necessary tables.
+- **Save conversations as notes** — ask Claude to save any discussion to your vault. Context that matters survives the session.
 - **MCP integration** — Claude (Desktop or Code) searches both backends in a single conversation, bridging prose and data automatically.
 - **You own everything** — notes stay as plain markdown files, data lives in a local Postgres you can inspect with CloudBeaver, and [backups are a single CLI command](docs/backup-and-restore.md).
 
