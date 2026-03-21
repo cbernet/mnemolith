@@ -16,9 +16,9 @@ Every insight you build with an AI assistant — research, decisions, context ab
 
 **Mnemolith turns conversations into knowledge you actually own.**
 
-Ask Claude to save a discussion as a note and it becomes a plain markdown file in your Obsidian vault — something you can read, edit, reorganize, and link to other notes. You and Claude share the same knowledge base. You write notes, Claude reads them. Claude writes notes, you read them. When you ask Claude a question, you know exactly where the answer came from.
+Ask Claude to save a discussion and it becomes a structured markdown note in your Obsidian vault — something you can read, edit, reorganize, and link to other notes. A new bit of knowledge for your future self.
 
-This is what working *with* your AI looks like.
+You and Claude share the same knowledge base. You write notes, Claude reads them. Claude writes notes, you read them. When you ask Claude a question, you know exactly where the answer came from.
 
 - **Semantic search** — index your markdown notes into a vector database and find them by meaning, not just keywords. Choose between [pgvector](https://github.com/pgvector/pgvector) (simpler, one database for everything) and [Qdrant](https://qdrant.tech) (dedicated vector DB).
 - **Structured data** — store todo lists, habit trackers, portfolios, and anything tabular in PostgreSQL. Just tell Claude what you want and it will create the necessary tables.
