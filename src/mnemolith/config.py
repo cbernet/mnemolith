@@ -60,6 +60,10 @@ def get_qdrant_api_key() -> str | None:
     return os.environ.get("QDRANT_API_KEY")
 
 
+def get_vector_backend() -> str:
+    return os.environ.get("VECTOR_BACKEND", "qdrant")
+
+
 def get_backup_dir() -> Path:
     return Path(os.environ.get("BACKUP_DIR", "~/.mnemolith/backups")).expanduser()
 

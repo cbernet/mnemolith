@@ -5,7 +5,6 @@ import psycopg
 import pytest
 from dotenv import load_dotenv
 from psycopg_pool import ConnectionPool
-from qdrant_client.http.exceptions import ResponseHandlingException
 
 from mnemolith.config import get_postgres_dsn
 from mnemolith.embeddings import MockEmbedder
@@ -51,18 +50,3 @@ def pg_pool():
     admin_conn.close()
 
 
-@pytest.fixture
-def qdrant_collection():
-    from mnemolith.qdrant_store import get_client, delete_collection
-
-    name = f"test_{uuid.uuid4().hex[:8]}"
-    try:
-        client = get_client()
-        client.get_collections()  # verify connection
-    except (ResponseHandlingException, OSError):
-        pytest.skip("Qdrant not reachable — run: docker compose up -d")
-    yield name, client
-    try:
-        delete_collection(client, name)
-    except Exception:
-        pass

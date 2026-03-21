@@ -3,11 +3,10 @@ import sys
 from argparse import Namespace
 from unittest.mock import patch, Mock
 
-import httpx
 import pytest
-from qdrant_client.http.exceptions import UnexpectedResponse
 
 from mnemolith.main import cmd_index, cmd_search, cmd_backup, cmd_restore
+from mnemolith.vector_store import CollectionNotFoundError
 
 
 def test_main_help():
@@ -28,10 +27,10 @@ def test_cmd_index_invalid_path(tmp_path):
 
 
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")
-@patch("mnemolith.main.get_client")
+@patch("mnemolith.main.get_vector_store")
 @patch("mnemolith.main.build_embedder")
 @patch("mnemolith.main.index_vault", return_value=["c1", "c2", "c3"])
-def test_cmd_index_success(mock_index, mock_embedder, mock_client, mock_collection, tmp_path, capsys):
+def test_cmd_index_success(mock_index, mock_embedder, mock_store, mock_collection, tmp_path, capsys):
     args = Namespace(vault_path=str(tmp_path), clean=False)
     cmd_index(args)
     assert "Indexed 3 chunks" in capsys.readouterr().out
@@ -39,10 +38,10 @@ def test_cmd_index_success(mock_index, mock_embedder, mock_client, mock_collecti
 
 
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")
-@patch("mnemolith.main.get_client")
+@patch("mnemolith.main.get_vector_store")
 @patch("mnemolith.main.build_embedder")
 @patch("mnemolith.main.search")
-def test_cmd_search_success(mock_search, mock_embedder, mock_client, mock_collection, capsys):
+def test_cmd_search_success(mock_search, mock_embedder, mock_store, mock_collection, capsys):
     mock_search.return_value = [
         {"score": 0.9, "path": "note.md", "title": "Note", "heading": "Intro", "content": "Hello"},
     ]
@@ -55,16 +54,11 @@ def test_cmd_search_success(mock_search, mock_embedder, mock_client, mock_collec
 
 
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")
-@patch("mnemolith.main.get_client")
+@patch("mnemolith.main.get_vector_store")
 @patch("mnemolith.main.build_embedder")
 @patch("mnemolith.main.search")
-def test_cmd_search_collection_not_found(mock_search, mock_embedder, mock_client, mock_collection, capsys):
-    mock_search.side_effect = UnexpectedResponse(
-        status_code=404,
-        reason_phrase="Not Found",
-        content=b"",
-        headers=httpx.Headers(),
-    )
+def test_cmd_search_collection_not_found(mock_search, mock_embedder, mock_store, mock_collection, capsys):
+    mock_search.side_effect = CollectionNotFoundError("test_collection")
     args = Namespace(query="test", limit=5, score_threshold=None)
     with pytest.raises(SystemExit, match="1"):
         cmd_search(args)

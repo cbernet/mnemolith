@@ -9,9 +9,10 @@ Mnemolith is configured through environment variables. You can set them in a `.e
 | `OBSIDIAN_VAULT_PATH` | Absolute path to your Obsidian vault | *(required)* |
 | `OPENAI_API_KEY` | OpenAI API key (required when using OpenAI embeddings) | — |
 | `EMBEDDING_PROVIDER` | Embedding provider to use (`openai`) | *(required)* |
-| `QDRANT_URL` | Qdrant server URL | *(required)* |
+| `VECTOR_BACKEND` | Vector store backend (`qdrant` or `pgvector`) | `qdrant` |
+| `QDRANT_URL` | Qdrant server URL (only when `VECTOR_BACKEND=qdrant`) | *(required for Qdrant)* |
 | `QDRANT_API_KEY` | Qdrant API key for authentication | *(optional — no auth if unset)* |
-| `COLLECTION_NAME` | Qdrant collection name | *(required)* |
+| `COLLECTION_NAME` | Collection/table name for vector storage | *(required)* |
 | `POSTGRES_DSN` | PostgreSQL connection string (overrides component variables below) | — |
 | `POSTGRES_USER` | PostgreSQL user | *(required if no DSN)* |
 | `POSTGRES_PASSWORD` | PostgreSQL password | *(required if no DSN)* |
@@ -46,9 +47,30 @@ To use it, set your API key:
 OPENAI_API_KEY=sk-...
 ```
 
-## Qdrant
+## Vector store backend
 
-The `.env.example` sets `QDRANT_URL=http://localhost:6333`, which matches the `docker-compose.yml` included in the project.
+Mnemolith supports two vector store backends. Set `VECTOR_BACKEND` to choose:
+
+### pgvector (recommended for simplicity)
+
+Stores vectors directly in PostgreSQL using the [pgvector](https://github.com/pgvector/pgvector) extension. No extra service needed — everything lives in one database.
+
+```bash
+VECTOR_BACKEND=pgvector
+COLLECTION_NAME=obsidian
+```
+
+The Docker Compose file uses the `pgvector/pgvector:pg17` image, which includes the extension out of the box.
+
+### Qdrant (default)
+
+Uses a dedicated [Qdrant](https://qdrant.tech) vector database with HNSW indexing.
+
+```bash
+VECTOR_BACKEND=qdrant
+QDRANT_URL=http://localhost:6333
+COLLECTION_NAME=obsidian
+```
 
 For a remote Qdrant instance:
 
@@ -56,7 +78,7 @@ For a remote Qdrant instance:
 QDRANT_URL=https://your-qdrant-host:6333
 ```
 
-If your Qdrant instance requires authentication, set the API key:
+If your Qdrant instance requires authentication:
 
 ```bash
 QDRANT_API_KEY=your-secret-key
@@ -98,12 +120,16 @@ POSTGRES_DSN=postgresql://user:password@host:5432/dbname
 
 ```bash
 OBSIDIAN_VAULT_PATH=/Users/yourname/Obsidian Vault
-QDRANT_URL=http://localhost:6333
-QDRANT_API_KEY=change-me-to-a-strong-secret
-COLLECTION_NAME=obsidian
 EMBEDDING_PROVIDER=openai
 OPENAI_API_KEY=sk-...
+COLLECTION_NAME=obsidian
 POSTGRES_USER=mnemolith
 POSTGRES_PASSWORD=change-me-to-a-strong-password
 POSTGRES_DB=mnemolith
+
+# Vector backend — pick one:
+VECTOR_BACKEND=pgvector           # vectors in PostgreSQL (simple)
+# VECTOR_BACKEND=qdrant           # dedicated vector DB
+# QDRANT_URL=http://localhost:6333
+# QDRANT_API_KEY=change-me-to-a-strong-secret
 ```

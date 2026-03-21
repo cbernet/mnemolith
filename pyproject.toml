@@ -27,6 +27,7 @@ mnemolith-mcp = "mnemolith.mcp_server:main"
 markers = [
     "integration: tests requiring a running Qdrant instance",
     "pg_integration: tests requiring a running PostgreSQL instance",
+    "pgvector_integration: tests requiring PostgreSQL with pgvector extension",
 ]
 
 [tool.coverage.run]

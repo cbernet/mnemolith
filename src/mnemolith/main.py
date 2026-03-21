@@ -2,13 +2,11 @@ import argparse
 import sys
 from pathlib import Path
 
-from qdrant_client.http.exceptions import UnexpectedResponse
-
 from mnemolith.backup import create_backup, restore_backup
 from mnemolith.config import get_vault_path, get_collection_name
 from mnemolith.embeddings import build_embedder
 from mnemolith.indexer import index_vault, search
-from mnemolith.qdrant_store import get_client
+from mnemolith.vector_store import get_vector_store, CollectionNotFoundError
 
 MAX_LIMIT = 50
 
@@ -19,23 +17,21 @@ def cmd_index(args):
         print(f"Error: '{vault_path}' is not a valid directory.")
         sys.exit(1)
     embedder = build_embedder()
-    client = get_client()
-    chunks = index_vault(vault_path, embedder, client, get_collection_name(), clean=args.clean)
+    store = get_vector_store()
+    chunks = index_vault(vault_path, embedder, store, get_collection_name(), clean=args.clean)
     print(f"Indexed {len(chunks)} chunks.")
 
 
 def cmd_search(args):
     embedder = build_embedder()
-    client = get_client()
+    store = get_vector_store()
     collection = get_collection_name()
     limit = max(1, min(args.limit, MAX_LIMIT))
     try:
-        results = search(args.query, embedder, client, collection, limit=limit, score_threshold=args.score_threshold)
-    except UnexpectedResponse as e:
-        if e.status_code == 404:
-            print(f"Collection '{collection}' not found. Run 'mnemolith index' first.")
-            sys.exit(1)
-        raise
+        results = search(args.query, embedder, store, collection, limit=limit, score_threshold=args.score_threshold)
+    except CollectionNotFoundError:
+        print(f"Collection '{collection}' not found. Run 'mnemolith index' first.")
+        sys.exit(1)
     for r in reversed(results):
         heading = f" > {r['heading']}" if r.get('heading') else ""
         print("-"*70)
@@ -63,7 +59,7 @@ def main():
     parser = argparse.ArgumentParser(prog="mnemolith")
     sub = parser.add_subparsers(dest="command")
 
-    index_p = sub.add_parser("index", help="Index vault into Qdrant")
+    index_p = sub.add_parser("index", help="Index vault into vector store")
     index_p.add_argument("vault_path", nargs="?", help="Path to vault (or use OBSIDIAN_VAULT_PATH)")
     index_p.add_argument("--clean", action="store_true", help="Delete and recreate the collection before indexing")
     index_p.set_defaults(func=cmd_index)
@@ -76,7 +72,7 @@ def main():
                           help="Minimum similarity score (0-1) to include a result")
     search_p.set_defaults(func=cmd_search)
 
-    backup_p = sub.add_parser("backup", help="Backup PostgreSQL and Qdrant data")
+    backup_p = sub.add_parser("backup", help="Backup PostgreSQL and vector store data")
     backup_p.add_argument("--dir", help="Backup directory (or use BACKUP_DIR env var)")
     backup_p.set_defaults(func=cmd_backup)
 

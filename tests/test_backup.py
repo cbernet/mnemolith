@@ -122,22 +122,22 @@ class TestBackupQdrant:
         monkeypatch.setenv("COLLECTION_NAME", "test_col")
         monkeypatch.delenv("QDRANT_API_KEY", raising=False)
 
-        mock_client = MagicMock()
+        mock_store = MagicMock()
         snapshot_desc = MagicMock()
         snapshot_desc.name = "test_col-2026-03-15.snapshot"
-        mock_client.create_snapshot.return_value = snapshot_desc
+        mock_store.client.create_snapshot.return_value = snapshot_desc
 
         mock_response = MagicMock()
         mock_response.iter_bytes.return_value = [b"snapshot-data-chunk"]
         http_mock = self._make_http_mock(mock_response)
 
-        with patch("mnemolith.backup.get_client", return_value=mock_client):
+        with patch("mnemolith.qdrant_store.QdrantStore", return_value=mock_store):
             with patch("httpx.Client", return_value=http_mock):
                 path = backup_qdrant(tmp_path)
 
         assert path == tmp_path / "qdrant_snapshot.snapshot"
         assert path.read_bytes() == b"snapshot-data-chunk"
-        mock_client.create_snapshot.assert_called_once_with("test_col", wait=True)
+        mock_store.client.create_snapshot.assert_called_once_with("test_col", wait=True)
 
     def test_snapshot_download_failure_raises(self, tmp_path, monkeypatch):
         from mnemolith.backup import backup_qdrant
@@ -146,10 +146,10 @@ class TestBackupQdrant:
         monkeypatch.setenv("COLLECTION_NAME", "test_col")
         monkeypatch.delenv("QDRANT_API_KEY", raising=False)
 
-        mock_client = MagicMock()
+        mock_store = MagicMock()
         snapshot_desc = MagicMock()
         snapshot_desc.name = "snap.snapshot"
-        mock_client.create_snapshot.return_value = snapshot_desc
+        mock_store.client.create_snapshot.return_value = snapshot_desc
 
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
@@ -157,7 +157,7 @@ class TestBackupQdrant:
         )
         http_mock = self._make_http_mock(mock_response)
 
-        with patch("mnemolith.backup.get_client", return_value=mock_client):
+        with patch("mnemolith.qdrant_store.QdrantStore", return_value=mock_store):
             with patch("httpx.Client", return_value=http_mock):
                 with pytest.raises(httpx.HTTPStatusError):
                     backup_qdrant(tmp_path)
@@ -200,7 +200,7 @@ class TestCreateBackup:
         from mnemolith.backup import create_backup
 
         with patch("mnemolith.backup.backup_postgres") as mock_pg, \
-             patch("mnemolith.backup.backup_qdrant") as mock_qd:
+             patch("mnemolith.backup.backup_vector_store") as mock_qd:
             result = create_backup(tmp_path)
 
         # Should be a timestamped subdirectory
@@ -217,7 +217,7 @@ class TestCreateBackup:
         monkeypatch.setenv("BACKUP_DIR", str(tmp_path))
 
         with patch("mnemolith.backup.backup_postgres"), \
-             patch("mnemolith.backup.backup_qdrant"):
+             patch("mnemolith.backup.backup_vector_store"):
             result = create_backup()
 
         assert result.parent == tmp_path
@@ -227,7 +227,7 @@ class TestCreateBackup:
         from mnemolith.backup import create_backup
 
         with patch("mnemolith.backup.backup_postgres"), \
-             patch("mnemolith.backup.backup_qdrant"):
+             patch("mnemolith.backup.backup_vector_store"):
             result = create_backup(tmp_path)
 
         assert re.match(r"\d{8}_\d{6}$", result.name)
@@ -238,11 +238,11 @@ class TestRestoreBackup:
         from mnemolith.backup import restore_backup
 
         with patch("mnemolith.backup.restore_postgres") as mock_pg, \
-             patch("mnemolith.backup.restore_qdrant") as mock_qd:
+             patch("mnemolith.backup.restore_vector_store") as mock_vs:
             restore_backup(tmp_path)
 
         mock_pg.assert_called_once_with(tmp_path)
-        mock_qd.assert_called_once_with(tmp_path)
+        mock_vs.assert_called_once_with(tmp_path)
 
     def test_nonexistent_dir_raises(self):
         from mnemolith.backup import restore_backup

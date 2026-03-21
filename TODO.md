@@ -21,3 +21,13 @@
 - [ ] Reranking with Cohere cross-encoder (retrieve top-20, rerank to top-5)
 - [ ] Hybrid search (BM25 sparse + dense vectors in Qdrant)
 - [ ] Metadata filtering (tags, folders) at search time
+
+## VectorStore abstraction
+
+- [X] pgvector
+- [ ] refacto : backup stuff in VectorStore ?
+- [ ] refacto : subpackages ?  
+- [ ] will the llm know it can search directly with a single select if pgvector backend is used ?
+- [ ] custom exceptions for VectorStore. which exceptions were used before ? are they all covered by CollectionNotFound ? 
+- [ ] integration tests for pgvector vectors and combined searches
+- [ ] update README

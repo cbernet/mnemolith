@@ -9,7 +9,7 @@ services:
       - qdrant_data:/qdrant/storage
 
   postgres:
-    image: postgres:17
+    image: pgvector/pgvector:pg17
     ports:
       - "127.0.0.1:${POSTGRES_PORT}:5432"
     environment:

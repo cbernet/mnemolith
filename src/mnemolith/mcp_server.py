@@ -7,7 +7,7 @@ from mnemolith.config import get_collection_name, get_vault_path
 from mnemolith.embeddings import build_embedder
 from mnemolith.indexer import search as indexer_search
 from mnemolith.pg_store import get_pool, close_pool
-from mnemolith.qdrant_store import get_client
+from mnemolith.vector_store import get_vector_store
 
 logging.basicConfig(
     filename="/tmp/mnemolith-mcp.log",
@@ -64,9 +64,9 @@ def search(query: str, limit: int = 5, score_threshold: float = 0.3) -> str:
     """
     limit = max(1, min(limit, MAX_LIMIT))
     embedder = build_embedder()
-    client = get_client()
+    store = get_vector_store()
     collection = get_collection_name()
-    results = indexer_search(query, embedder, client, collection, limit=limit, score_threshold=score_threshold)
+    results = indexer_search(query, embedder, store, collection, limit=limit, score_threshold=score_threshold)
     return format_results(results)
 
 

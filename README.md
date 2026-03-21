@@ -13,13 +13,13 @@
 Mnemolith turns your [Obsidian](https://obsidian.md) vault into a semantic search engine and pairs it with a PostgreSQL database for structured data. Together, they form a unified personal knowledge base that Claude can query through [MCP](https://modelcontextprotocol.io).
 
 - **Save your conversations as notes** - simply ask Claude to save the discussion as a note to your vault. 
-- **Semantic search** — index your markdown notes into [Qdrant](https://qdrant.tech) and find them by meaning, not just keywords.
+- **Semantic search** — index your markdown notes into a vector database and find them by meaning, not just keywords. Choose between [pgvector](https://github.com/pgvector/pgvector) (simpler, one database for everything) and [Qdrant](https://qdrant.tech) (dedicated vector DB).
 - **Structured data** — store todo lists, habit trackers, portfolios, and anything tabular in PostgreSQL. Just tell Claude what you want and it will create the necessary tables in Mnemolith. 
 - **MCP integration** — Claude (Desktop or Code) searches both backends in a single conversation, bridging prose and data automatically.
 - **You own everything** — notes stay as plain markdown files, data lives in a local Postgres you can inspect with CloudBeaver, and backups are a single CLI command.
 
 ```text
-Obsidian vault (.md) → Indexing script → Embedding API → Qdrant (Docker)
+Obsidian vault (.md) → Indexing script → Embedding API → Vector store
                                                               ↑
 Claude ← MCP server (mnemolith-mcp) ─────────────────────────┤
                                                               ↓
@@ -28,6 +28,10 @@ Claude ← MCP server (mnemolith-mcp) ──────────────
                                                          ↑
                                                    CloudBeaver (Docker)
                                                    (web UI, port 8978)
+
+Vector store is one of:
+  • pgvector  — vectors in PostgreSQL (VECTOR_BACKEND=pgvector)
+  • Qdrant   — dedicated vector DB  (VECTOR_BACKEND=qdrant, default)
 ```
 
 ## Documentation
@@ -56,31 +60,33 @@ Resist the urge to add a `notes` table in PG — that's what your vault is for.
 
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/)
-- Docker (for Qdrant and PostgreSQL)
+- Docker (for PostgreSQL and optionally Qdrant)
 - An OpenAI API key
 
 ## Development
 
 ```bash
-uv sync                              # install deps
-docker compose up -d                                     # start Qdrant, PostgreSQL, CloudBeaver
-uv run pytest -m "not integration and not pg_integration" # unit tests only
-uv run pytest                                            # all tests (requires Qdrant + PostgreSQL)
+uv sync                                                                        # install deps
+docker compose up -d                                                           # start services
+uv run pytest -m "not integration and not pg_integration and not pgvector_integration" # unit tests only
+uv run pytest                                                                  # all tests (requires Docker services)
 ```
 
 ## Project structure
 
 ```text
 src/mnemolith/
-    config.py        # Environment variable handling
-    main.py          # CLI entry point (index, search, backup, restore)
-    backup.py        # Backup and restore (pg_dump + Qdrant snapshots)
-    parser.py        # Obsidian-aware markdown parser (frontmatter, wiki-links, tags)
-    embeddings.py    # Embedding provider abstraction (OpenAI)
-    indexer.py       # Vault indexing pipeline
-    qdrant_store.py  # Qdrant vector store client
-    pg_store.py      # PostgreSQL structured data store
-    mcp_server.py    # MCP server exposing search + SQL tools to Claude
+    config.py         # Environment variable handling
+    main.py           # CLI entry point (index, search, backup, restore)
+    backup.py         # Backup and restore (pg_dump + vector store snapshots)
+    parser.py         # Obsidian-aware markdown parser (frontmatter, wiki-links, tags)
+    embeddings.py     # Embedding provider abstraction (OpenAI)
+    indexer.py        # Vault indexing pipeline
+    vector_store.py   # VectorStore protocol and factory
+    qdrant_store.py   # Qdrant backend
+    pgvector_store.py # pgvector backend (vectors in PostgreSQL)
+    pg_store.py       # PostgreSQL structured data store
+    mcp_server.py     # MCP server exposing search + SQL tools to Claude
 tests/
     fixtures/vault/  # Sample markdown notes for testing
 .claude-plugin/

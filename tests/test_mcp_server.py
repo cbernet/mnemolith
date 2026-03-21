@@ -50,10 +50,10 @@ def test_format_results_empty():
 
 
 @patch("mnemolith.mcp_server.indexer_search")
-@patch("mnemolith.mcp_server.get_client")
+@patch("mnemolith.mcp_server.get_vector_store")
 @patch("mnemolith.mcp_server.get_collection_name")
 @patch("mnemolith.mcp_server.build_embedder")
-def test_search_calls_indexer(mock_embedder, mock_collection, mock_client, mock_search):
+def test_search_calls_indexer(mock_embedder, mock_collection, mock_store, mock_search):
     mock_search.return_value = _make_results()
     result = search("test query", 3)
     mock_search.assert_called_once()

@@ -12,7 +12,6 @@ from mnemolith.config import (
     get_collection_name,
     get_qdrant_api_key,
 )
-from mnemolith.qdrant_store import get_client
 
 PG_DUMP_FILE = "pg_dump.sql"
 QDRANT_SNAPSHOT_FILE = "qdrant_snapshot.snapshot"
@@ -73,9 +72,10 @@ def _qdrant_headers() -> dict[str, str]:
 
 
 def backup_qdrant(backup_path: Path) -> Path:
-    client = get_client()
+    from mnemolith.qdrant_store import QdrantStore
+    store = QdrantStore()
     collection = get_collection_name()
-    snapshot = client.create_snapshot(collection, wait=True)
+    snapshot = store.client.create_snapshot(collection, wait=True)
 
     url = f"{get_qdrant_url()}/collections/{collection}/snapshots/{snapshot.name}"
     snapshot_file = backup_path / QDRANT_SNAPSHOT_FILE
@@ -104,6 +104,27 @@ def restore_qdrant(backup_path: Path) -> None:
     response.raise_for_status()
 
 
+def backup_vector_store(backup_path: Path) -> Path | None:
+    backend = os.environ.get("VECTOR_BACKEND", "qdrant")
+    if backend == "qdrant":
+        return backup_qdrant(backup_path)
+    elif backend == "pgvector":
+        # pgvector data is in PostgreSQL, already covered by backup_postgres
+        return None
+    raise ValueError(f"Unknown vector backend: {backend}")
+
+
+def restore_vector_store(backup_path: Path) -> None:
+    backend = os.environ.get("VECTOR_BACKEND", "qdrant")
+    if backend == "qdrant":
+        restore_qdrant(backup_path)
+    elif backend == "pgvector":
+        # pgvector data is in PostgreSQL, already covered by restore_postgres
+        pass
+    else:
+        raise ValueError(f"Unknown vector backend: {backend}")
+
+
 def create_backup(backup_dir: Path | None = None) -> Path:
     if backup_dir is None:
         backup_dir = get_backup_dir()
@@ -111,7 +132,7 @@ def create_backup(backup_dir: Path | None = None) -> Path:
     backup_path = backup_dir / timestamp
     backup_path.mkdir(parents=True, exist_ok=True)
     backup_postgres(backup_path)
-    backup_qdrant(backup_path)
+    backup_vector_store(backup_path)
     return backup_path
 
 
@@ -119,4 +140,4 @@ def restore_backup(backup_path: Path) -> None:
     if not backup_path.is_dir():
         raise FileNotFoundError(f"Backup directory not found: {backup_path}")
     restore_postgres(backup_path)
-    restore_qdrant(backup_path)
+    restore_vector_store(backup_path)
