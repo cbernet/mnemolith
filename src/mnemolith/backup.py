@@ -33,7 +33,7 @@ def backup_postgres(backup_path: Path) -> Path:
     cmd = [
         *_docker_compose_prefix(),
         "exec", "-T", PG_SERVICE,
-        "pg_dump", "-U", params["user"], params["dbname"],
+        "pg_dump", "--clean", "-U", params["user"], params["dbname"],
     ]
     try:
         result = subprocess.run(cmd, capture_output=True)

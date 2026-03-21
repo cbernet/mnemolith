@@ -16,7 +16,7 @@ Mnemolith turns your [Obsidian](https://obsidian.md) vault into a semantic searc
 - **Semantic search** — index your markdown notes into a vector database and find them by meaning, not just keywords. Choose between [pgvector](https://github.com/pgvector/pgvector) (simpler, one database for everything) and [Qdrant](https://qdrant.tech) (dedicated vector DB).
 - **Structured data** — store todo lists, habit trackers, portfolios, and anything tabular in PostgreSQL. Just tell Claude what you want and it will create the necessary tables in Mnemolith. 
 - **MCP integration** — Claude (Desktop or Code) searches both backends in a single conversation, bridging prose and data automatically.
-- **You own everything** — notes stay as plain markdown files, data lives in a local Postgres you can inspect with CloudBeaver, and backups are a single CLI command.
+- **You own everything** — notes stay as plain markdown files, data lives in a local Postgres you can inspect with CloudBeaver, and [backups are a single CLI command](docs/backup-and-restore.md).
 
 ```text
 Obsidian vault (.md) → Indexing script → Embedding API → Vector store
@@ -40,6 +40,7 @@ Vector store is one of:
 - [Getting Started](docs/getting-started.md) — install mnemolith, index, first search
 - [Configuration](docs/configuration.md) — environment variables and options
 - [Claude Integration](docs/claude-plugin.md) — MCP setup (Desktop & Code), plugin install, vault search, PostgreSQL, note creation
+- [**Backup & Restore**](docs/backup-and-restore.md) — backup commands, restore, cron automation
 - [CLI Reference](docs/cli-reference.md) — all commands and flags
 - [How It Works](docs/how-it-works.md) — architecture, parsing, chunking, embedding
 

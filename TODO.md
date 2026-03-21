@@ -15,6 +15,12 @@
 - [ ] `mnemolith index` incremental by default, `--full` flag for full rebuild
 - [ ] make sure vectors corresponding to deleted notes are removed
 
+## Maintenance
+
+- [ ] separate docker compose stack for integration tests
+- [ ] cronjobs for backups
+- [ ] keep track of n backups 
+
 ## RAG Improvements
 
 - [x] Score threshold to filter irrelevant results
@@ -24,10 +30,4 @@
 
 ## VectorStore abstraction
 
-- [X] pgvector
-- [ ] refacto : backup stuff in VectorStore ?
-- [ ] refacto : subpackages ?  
-- [ ] will the llm know it can search directly with a single select if pgvector backend is used ?
-- [ ] custom exceptions for VectorStore. which exceptions were used before ? are they all covered by CollectionNotFound ? 
-- [ ] integration tests for pgvector vectors and combined searches
-- [ ] update README
+- [X] pgvector added, user can choose pgvector or qdrant
