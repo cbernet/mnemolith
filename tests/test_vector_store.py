@@ -37,7 +37,7 @@ def test_get_vector_store_is_singleton():
     assert store1 is store2
 
 
-@patch.dict(os.environ, {"VECTOR_BACKEND": "pgvector"})
+@patch.dict(os.environ, {"VECTOR_BACKEND": "pgvector", "POSTGRES_DSN": "postgresql://user:pass@localhost/db"})
 @patch("mnemolith.pgvector_store.ConnectionPool")
 def test_get_vector_store_pgvector(mock_pool):
     store = get_vector_store()
