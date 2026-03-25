@@ -170,6 +170,7 @@ def test_build_sparse_embedder_disabled(monkeypatch):
 
 def test_build_sparse_embedder_enabled(monkeypatch):
     monkeypatch.setenv("SPARSE_SEARCH_ENABLED", "true")
-    from mnemolith.embeddings import BM25Embedder
-    embedder = build_sparse_embedder()
-    assert isinstance(embedder, BM25Embedder)
+    with patch("mnemolith.embeddings.BM25Embedder") as mock_cls:
+        result = build_sparse_embedder()
+        mock_cls.assert_called_once()
+        assert result is mock_cls.return_value
