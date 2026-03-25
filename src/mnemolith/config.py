@@ -65,7 +65,8 @@ def get_vector_backend() -> str:
 
 
 def is_sparse_search_enabled() -> bool:
-    return os.environ.get("SPARSE_SEARCH_ENABLED", "").lower() in ("true", "1")
+    val = os.environ.get("SPARSE_SEARCH_ENABLED", "true").lower()
+    return val not in ("false", "0")
 
 
 def get_backup_dir() -> Path:

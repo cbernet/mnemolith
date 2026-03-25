@@ -109,14 +109,14 @@ def test_is_sparse_search_enabled_default(monkeypatch):
     from mnemolith.config import is_sparse_search_enabled
 
     monkeypatch.delenv("SPARSE_SEARCH_ENABLED", raising=False)
-    assert is_sparse_search_enabled() is False
+    assert is_sparse_search_enabled() is True
 
 
-def test_is_sparse_search_enabled_true(monkeypatch):
+def test_is_sparse_search_enabled_disabled(monkeypatch):
     from mnemolith.config import is_sparse_search_enabled
 
-    monkeypatch.setenv("SPARSE_SEARCH_ENABLED", "true")
-    assert is_sparse_search_enabled() is True
+    monkeypatch.setenv("SPARSE_SEARCH_ENABLED", "false")
+    assert is_sparse_search_enabled() is False
 
-    monkeypatch.setenv("SPARSE_SEARCH_ENABLED", "1")
-    assert is_sparse_search_enabled() is True
+    monkeypatch.setenv("SPARSE_SEARCH_ENABLED", "0")
+    assert is_sparse_search_enabled() is False

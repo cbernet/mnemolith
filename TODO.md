@@ -7,7 +7,7 @@
 - [x] Configurable backup directory (`BACKUP_DIR`, default `~/.mnemolith/backups/`)
 - [x] Timestamped backup folders with `pg_dump.sql` + `qdrant_snapshot.snapshot`
 
-## Incremental Indexing
+## Incremental Indexing (low priority, indexing still cheap and fast)
 
 - [ ] Store `file_hash` (content hash) in Qdrant point payloads
 - [ ] On index: detect new, modified, deleted files vs existing Qdrant state
@@ -25,7 +25,7 @@
 
 - [x] Score threshold to filter irrelevant results
 - [ ] Reranking with Cohere cross-encoder (retrieve top-20, rerank to top-5)
-- [ ] Hybrid search (BM25 sparse + dense vectors in Qdrant)
+- [x] Hybrid search (BM25 sparse + dense vectors in Qdrant)
 - [ ] Metadata filtering (tags, folders) at search time
 
 ## VectorStore abstraction

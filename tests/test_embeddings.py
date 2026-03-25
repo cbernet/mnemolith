@@ -164,7 +164,7 @@ def test_mock_sparse_embedder_embed_batch():
 
 
 def test_build_sparse_embedder_disabled(monkeypatch):
-    monkeypatch.delenv("SPARSE_SEARCH_ENABLED", raising=False)
+    monkeypatch.setenv("SPARSE_SEARCH_ENABLED", "false")
     assert build_sparse_embedder() is None
 
 
