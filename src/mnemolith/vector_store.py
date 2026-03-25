@@ -1,6 +1,7 @@
 import os
 from typing import Protocol
 
+from mnemolith.embeddings import SparseVector
 from mnemolith.parser import Document
 
 
@@ -20,7 +21,7 @@ class VectorStore(Protocol):
         collection: str,
         documents: list[Document],
         vectors: list[list[float]],
-        sparse_vectors=None,
+        sparse_vectors: list[SparseVector] | None = None,
     ) -> None: ...
     def search(
         self,
@@ -28,7 +29,7 @@ class VectorStore(Protocol):
         query_vector: list[float],
         limit: int = 5,
         score_threshold: float | None = None,
-        sparse_query=None,
+        sparse_query: SparseVector | None = None,
     ) -> list[dict]: ...
 
 

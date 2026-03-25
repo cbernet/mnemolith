@@ -1,4 +1,4 @@
-from mnemolith.embeddings import Embedder
+from mnemolith.embeddings import Embedder, SparseEmbedder
 from mnemolith.parser import Document, build_embedding_text, chunk_document, parse_vault
 from mnemolith.vector_store import VectorStore
 
@@ -9,7 +9,7 @@ def index_vault(
     store: VectorStore,
     collection: str,
     clean: bool = False,
-    sparse_embedder=None,
+    sparse_embedder: SparseEmbedder | None = None,
 ) -> list[Document]:
     documents = parse_vault(vault_path)
     if not documents:
@@ -37,7 +37,7 @@ def search(
     collection: str,
     limit: int = 5,
     score_threshold: float | None = None,
-    sparse_embedder=None,
+    sparse_embedder: SparseEmbedder | None = None,
 ) -> list[dict]:
     query_vector = embedder.embed(query)
     sparse_query = sparse_embedder.embed(query) if sparse_embedder else None
