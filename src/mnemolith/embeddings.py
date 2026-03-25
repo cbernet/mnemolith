@@ -46,9 +46,13 @@ class OpenAIEmbedder:
         response = self.client.embeddings.create(input=text, model=self.model)
         return response.data[0].embedding
 
-    def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        response = self.client.embeddings.create(input=texts, model=self.model)
-        return [item.embedding for item in response.data]
+    def embed_batch(self, texts: list[str], batch_size: int = 100) -> list[list[float]]:
+        results = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            response = self.client.embeddings.create(input=batch, model=self.model)
+            results.extend(item.embedding for item in response.data)
+        return results
 
 
 @dataclass

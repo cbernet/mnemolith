@@ -82,6 +82,26 @@ def test_openai_embedder_embed_batch():
         )
 
 
+def test_openai_embedder_embed_batch_splits_large_input():
+    with patch("openai.OpenAI") as mock_openai:
+        mock_client = Mock()
+        mock_openai.return_value = mock_client
+
+        def make_response(texts):
+            r = Mock()
+            r.data = [Mock(embedding=[float(i)]) for i in range(len(texts))]
+            return r
+
+        mock_client.embeddings.create.side_effect = lambda input, model: make_response(input)
+
+        e = OpenAIEmbedder(model="text-embedding-3-small", dimension=1)
+        texts = [f"text {i}" for i in range(250)]
+        vecs = e.embed_batch(texts, batch_size=100)
+
+        assert len(vecs) == 250
+        assert mock_client.embeddings.create.call_count == 3
+
+
 @pytest.mark.integration
 @pytest.mark.skipif(
     not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
