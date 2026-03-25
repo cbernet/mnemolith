@@ -156,6 +156,22 @@ def test_dense_search_does_not_call_has_named_vectors(vault_path, mock_embedder,
         mock_hnv.assert_not_called()
 
 
+def test_ensure_collection_raises_on_schema_mismatch(mock_embedder, qdrant_store, collection_name):
+    """Switching SPARSE_SEARCH_ENABLED on an existing dense collection must raise."""
+    qdrant_store.ensure_collection(collection_name, dimension=4, sparse=False)
+    with pytest.raises(ValueError, match="--clean"):
+        qdrant_store.ensure_collection(collection_name, dimension=4, sparse=True)
+
+
+def test_ensure_collection_reuses_existing_sparse_collection(mock_embedder, qdrant_store, collection_name):
+    """Re-running ensure_collection(sparse=True) on an existing sparse collection populates cache."""
+    qdrant_store.ensure_collection(collection_name, dimension=4, sparse=True)
+    # Simulate a fresh store instance that doesn't know about the collection yet
+    fresh_store = QdrantStore()
+    fresh_store.ensure_collection(collection_name, dimension=4, sparse=True)
+    assert collection_name in fresh_store._named_vector_collections
+
+
 def test_dense_search_on_named_vector_collection(vault_path, mock_embedder, qdrant_store, collection_name):
     """Dense-only search still works on a collection indexed with named vectors."""
     from mnemolith.embeddings import MockSparseEmbedder

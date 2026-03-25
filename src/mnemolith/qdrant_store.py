@@ -29,6 +29,14 @@ class QdrantStore:
     def ensure_collection(self, name: str, dimension: int, sparse: bool = False) -> None:
         collections = [c.name for c in self.client.get_collections().collections]
         if name in collections:
+            has_named = self._has_named_vectors(name)
+            if sparse and not has_named:
+                raise ValueError(
+                    f"Collection '{name}' exists without sparse vectors. "
+                    "Re-run indexing with --clean to recreate it."
+                )
+            if has_named:
+                self._named_vector_collections.add(name)
             return
         if sparse:
             self.client.create_collection(
