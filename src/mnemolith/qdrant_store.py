@@ -116,7 +116,8 @@ class QdrantStore:
                     ],
                     query=FusionQuery(fusion=Fusion.RRF),
                     limit=limit,
-                    score_threshold=score_threshold,
+                    # score_threshold is not applied for RRF: RRF scores are rank-based
+                    # (1/(1+rank)) and not comparable to cosine similarity thresholds.
                 )
             elif self._has_named_vectors(collection):
                 # Dense-only on a named-vector collection: must specify using="dense"

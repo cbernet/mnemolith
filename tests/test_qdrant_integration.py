@@ -111,6 +111,38 @@ def test_hybrid_index_and_search(vault_path, mock_embedder, qdrant_store, collec
     assert all("path" in r for r in results)
 
 
+def test_hybrid_search_ignores_score_threshold(vault_path, mock_embedder, qdrant_store, collection_name):
+    """RRF scores are ~0.016-0.05; a threshold of 0.3 must not filter all results."""
+    from mnemolith.embeddings import MockSparseEmbedder
+    sparse_embedder = MockSparseEmbedder()
+
+    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+
+    all_results = search(
+        "simple note",
+        mock_embedder,
+        qdrant_store,
+        collection_name,
+        limit=5,
+        sparse_embedder=sparse_embedder,
+    )
+    assert len(all_results) > 0
+    max_rrf_score = max(r["score"] for r in all_results)
+
+    # Passing a threshold above the max RRF score must not filter all results —
+    # score_threshold is meaningless for rank-based RRF scores and must be ignored.
+    results = search(
+        "simple note",
+        mock_embedder,
+        qdrant_store,
+        collection_name,
+        limit=5,
+        score_threshold=max_rrf_score + 0.1,
+        sparse_embedder=sparse_embedder,
+    )
+    assert len(results) == len(all_results)
+
+
 def test_dense_search_on_named_vector_collection(vault_path, mock_embedder, qdrant_store, collection_name):
     """Dense-only search still works on a collection indexed with named vectors."""
     from mnemolith.embeddings import MockSparseEmbedder
