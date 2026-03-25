@@ -1,6 +1,5 @@
-import subprocess
 from pathlib import Path
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
@@ -48,9 +47,8 @@ class TestBackupPostgres:
             result.stdout = b""
             return result
 
-        with patch("subprocess.run", side_effect=fake_run):
-            with pytest.raises(RuntimeError, match="pg_dump failed"):
-                backup_postgres(tmp_path)
+        with patch("subprocess.run", side_effect=fake_run), pytest.raises(RuntimeError, match="pg_dump failed"):
+            backup_postgres(tmp_path)
 
     def test_missing_docker_raises(self, tmp_path, monkeypatch):
         from mnemolith.backup import backup_postgres
@@ -60,9 +58,9 @@ class TestBackupPostgres:
         monkeypatch.setenv("POSTGRES_DB", "db")
         monkeypatch.delenv("COMPOSE_FILE", raising=False)
 
-        with patch("subprocess.run", side_effect=FileNotFoundError):
-            with pytest.raises(RuntimeError, match="docker compose not found"):
-                backup_postgres(tmp_path)
+        with patch("subprocess.run", side_effect=FileNotFoundError), \
+                pytest.raises(RuntimeError, match="docker compose not found"):
+            backup_postgres(tmp_path)
 
 
 class TestRestorePostgres:
@@ -99,7 +97,7 @@ class TestRestorePostgres:
         monkeypatch.setenv("POSTGRES_PASSWORD", "p")
         monkeypatch.setenv("POSTGRES_DB", "db")
 
-        with pytest.raises(FileNotFoundError, match="pg_dump.sql"):
+        with pytest.raises(FileNotFoundError, match=r"pg_dump\.sql"):
             restore_postgres(tmp_path)
 
 
@@ -131,9 +129,9 @@ class TestBackupQdrant:
         mock_response.iter_bytes.return_value = [b"snapshot-data-chunk"]
         http_mock = self._make_http_mock(mock_response)
 
-        with patch("mnemolith.qdrant_store.QdrantStore", return_value=mock_store):
-            with patch("httpx.Client", return_value=http_mock):
-                path = backup_qdrant(tmp_path)
+        with patch("mnemolith.qdrant_store.QdrantStore", return_value=mock_store), \
+                patch("httpx.Client", return_value=http_mock):
+            path = backup_qdrant(tmp_path)
 
         assert path == tmp_path / "qdrant_snapshot.snapshot"
         assert path.read_bytes() == b"snapshot-data-chunk"
@@ -157,10 +155,10 @@ class TestBackupQdrant:
         )
         http_mock = self._make_http_mock(mock_response)
 
-        with patch("mnemolith.qdrant_store.QdrantStore", return_value=mock_store):
-            with patch("httpx.Client", return_value=http_mock):
-                with pytest.raises(httpx.HTTPStatusError):
-                    backup_qdrant(tmp_path)
+        with patch("mnemolith.qdrant_store.QdrantStore", return_value=mock_store), \
+                patch("httpx.Client", return_value=http_mock), \
+                pytest.raises(httpx.HTTPStatusError):
+            backup_qdrant(tmp_path)
 
 
 class TestRestoreQdrant:
@@ -191,7 +189,7 @@ class TestRestoreQdrant:
         monkeypatch.setenv("QDRANT_URL", "http://localhost:6333")
         monkeypatch.setenv("COLLECTION_NAME", "test_col")
 
-        with pytest.raises(FileNotFoundError, match="qdrant_snapshot.snapshot"):
+        with pytest.raises(FileNotFoundError, match=r"qdrant_snapshot\.snapshot"):
             restore_qdrant(tmp_path)
 
 
@@ -224,6 +222,7 @@ class TestCreateBackup:
 
     def test_timestamp_format(self, tmp_path):
         import re
+
         from mnemolith.backup import create_backup
 
         with patch("mnemolith.backup.backup_postgres"), \

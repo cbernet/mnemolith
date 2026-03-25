@@ -1,6 +1,7 @@
 from psycopg.sql import SQL, Identifier
 from psycopg_pool import ConnectionPool
 
+from mnemolith.embeddings import SparseVector as EmbSparseVector
 from mnemolith.parser import Document
 from mnemolith.vector_store import CollectionNotFoundError
 
@@ -12,7 +13,7 @@ class PgvectorStore:
             pool = ConnectionPool(get_postgres_dsn(), open=True)
         self.pool = pool
 
-    def ensure_collection(self, name: str, dimension: int) -> None:
+    def ensure_collection(self, name: str, dimension: int, sparse: bool = False) -> None:
         with self.pool.connection() as conn:
             conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
             conn.execute(SQL("""
@@ -39,7 +40,10 @@ class PgvectorStore:
         collection: str,
         documents: list[Document],
         vectors: list[list[float]],
+        sparse_vectors: list[EmbSparseVector] | None = None,
     ) -> None:
+        if sparse_vectors is not None:
+            raise NotImplementedError("pgvector backend does not support sparse vectors")
         with self.pool.connection() as conn:
             # Clear existing data and insert fresh (reindex semantics)
             conn.execute(SQL("DELETE FROM {}").format(Identifier(collection)))
@@ -61,7 +65,10 @@ class PgvectorStore:
         query_vector: list[float],
         limit: int = 5,
         score_threshold: float | None = None,
+        sparse_query: EmbSparseVector | None = None,
     ) -> list[dict]:
+        if sparse_query is not None:
+            raise NotImplementedError("pgvector backend does not support sparse search")
         vector_str = "[" + ",".join(str(v) for v in query_vector) + "]"
         try:
             with self.pool.connection() as conn:

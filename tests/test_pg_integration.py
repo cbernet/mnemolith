@@ -1,18 +1,19 @@
 import pytest
 
 from mnemolith.pg_store import (
-    list_tables,
     describe_table,
     execute_ddl,
-    execute_query,
     execute_mutate,
+    execute_query,
+    list_tables,
 )
 
 pytestmark = pytest.mark.pg_integration
 
 
 def test_create_and_list_table(pg_pool):
-    execute_ddl(pg_pool, "CREATE TABLE test_groceries (id serial PRIMARY KEY, item text NOT NULL, quantity int DEFAULT 1)")
+    execute_ddl(pg_pool, "CREATE TABLE test_groceries "
+                "(id serial PRIMARY KEY, item text NOT NULL, quantity int DEFAULT 1)")
     tables = list_tables(pg_pool)
     assert "test_groceries" in tables
 

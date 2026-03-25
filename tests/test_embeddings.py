@@ -4,7 +4,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from mnemolith.embeddings import MockEmbedder, OpenAIEmbedder, build_embedder
+from mnemolith.embeddings import (
+    MockEmbedder,
+    MockSparseEmbedder,
+    OpenAIEmbedder,
+    SparseVector,
+    build_embedder,
+    build_sparse_embedder,
+)
 
 
 def test_mock_embedder_dimension():
@@ -82,6 +89,26 @@ def test_openai_embedder_embed_batch():
         )
 
 
+def test_openai_embedder_embed_batch_splits_large_input():
+    with patch("openai.OpenAI") as mock_openai:
+        mock_client = Mock()
+        mock_openai.return_value = mock_client
+
+        def make_response(texts):
+            r = Mock()
+            r.data = [Mock(embedding=[float(i)]) for i in range(len(texts))]
+            return r
+
+        mock_client.embeddings.create.side_effect = lambda input, model, **_: make_response(input)  # noqa: A006
+
+        e = OpenAIEmbedder(model="text-embedding-3-small", dimension=1)
+        texts = [f"text {i}" for i in range(250)]
+        vecs = e.embed_batch(texts, batch_size=100)
+
+        assert len(vecs) == 250
+        assert mock_client.embeddings.create.call_count == 3
+
+
 @pytest.mark.integration
 @pytest.mark.skipif(
     not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
@@ -100,3 +127,67 @@ def test_build_embedder_unknown_provider(monkeypatch):
     monkeypatch.setenv("EMBEDDING_PROVIDER", "unknown")
     with pytest.raises(ValueError, match="Unknown embedding provider"):
         build_embedder()
+
+
+def test_mock_sparse_embedder_returns_sparse_vector():
+    e = MockSparseEmbedder()
+    sv = e.embed("hello world")
+    assert isinstance(sv, SparseVector)
+    assert len(sv.indices) > 0
+    assert len(sv.indices) == len(sv.values)
+    assert all(isinstance(i, int) for i in sv.indices)
+    assert all(isinstance(v, float) for v in sv.values)
+
+
+def test_mock_sparse_embedder_deterministic():
+    e = MockSparseEmbedder()
+    sv1 = e.embed("same text")
+    sv2 = e.embed("same text")
+    assert sv1.indices == sv2.indices
+    assert sv1.values == sv2.values
+
+
+def test_mock_sparse_embedder_different_texts():
+    e = MockSparseEmbedder()
+    sv1 = e.embed("text one")
+    sv2 = e.embed("text two")
+    assert sv1.indices != sv2.indices or sv1.values != sv2.values
+
+
+def test_mock_sparse_embedder_embed_batch():
+    e = MockSparseEmbedder()
+    results = e.embed_batch(["hello", "world", "hello"])
+    assert len(results) == 3
+    # deterministic: same text -> same sparse vector
+    assert results[0].indices == results[2].indices
+    assert results[0].values == results[2].values
+
+
+def test_build_sparse_embedder_disabled(monkeypatch):
+    monkeypatch.delenv("SPARSE_SEARCH_ENABLED", raising=False)
+    assert build_sparse_embedder() is None
+
+
+def test_build_sparse_embedder_enabled(monkeypatch):
+    monkeypatch.setenv("SPARSE_SEARCH_ENABLED", "true")
+    with patch("mnemolith.embeddings.BM25Embedder") as mock_cls:
+        result = build_sparse_embedder()
+        mock_cls.assert_called_once()
+        assert result is mock_cls.return_value
+
+
+@pytest.mark.integration
+def test_bm25_embedder_produces_valid_sparse_vectors():
+    """Real BM25Embedder via fastembed — verifies non-empty indices/values."""
+    from mnemolith.embeddings import BM25Embedder
+    e = BM25Embedder()
+    sv = e.embed("the quick brown fox jumps over the lazy dog")
+    assert isinstance(sv, SparseVector)
+    assert len(sv.indices) > 0
+    assert len(sv.indices) == len(sv.values)
+    assert all(isinstance(i, int) for i in sv.indices)
+    assert all(isinstance(v, float) for v in sv.values)
+    # batch: same text -> same sparse vector
+    results = e.embed_batch(["hello world", "hello world"])
+    assert results[0].indices == results[1].indices
+    assert results[0].values == results[1].values

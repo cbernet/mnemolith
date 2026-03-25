@@ -13,6 +13,7 @@ dependencies = [
     "pyyaml>=6.0",
     "tqdm>=4.0",
     "psycopg[binary,pool]>=3.1",
+    "fastembed>=0.4",
 ]
 
 [build-system]
@@ -36,8 +37,30 @@ source = ["mnemolith"]
 [tool.coverage.report]
 show_missing = true
 
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F",   # pycodestyle + pyflakes
+    "I",             # import sorting
+    "UP",            # pyupgrade: modernize syntax for Python 3.13
+    "A",             # builtin shadowing
+    "C4",            # comprehension style
+    "ISC",           # implicit string concatenation bugs
+    "LOG",           # logging best practices
+    "SIM",           # simplification suggestions
+    "RUF",           # ruff-specific rules
+]
+ignore = [
+    "SIM102",        # "use single if" — too aggressive with guard clauses
+    "SIM105",        # "use contextlib.suppress" — loses readability
+]
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
     "pytest-cov>=6.0",
+    "ruff>=0.15.7",
 ]

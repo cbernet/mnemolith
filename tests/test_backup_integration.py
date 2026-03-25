@@ -1,7 +1,7 @@
 import pytest
 
-from mnemolith.pg_store import execute_ddl, execute_query, execute_mutate
 from mnemolith.backup import backup_postgres, restore_postgres
+from mnemolith.pg_store import execute_ddl, execute_mutate, execute_query
 
 pytestmark = pytest.mark.pg_integration
 

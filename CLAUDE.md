@@ -25,16 +25,19 @@ docker compose up -d # start Qdrant + PostgreSQL
 
 ## test-driven development
 
-CRITICAL: always do the following: 
+CRITICAL: always do the following
 
 - start in plan mode when I ask you to do something
+- when I ask a question, do not act, just answer
+
+## Testing and development workflow (TDD)
+
 - write new unit tests first
 - run the tests to make sure they fail
 - write the code
 - make sure the tests pass by editing the code
 - run the tests when you're done editing
-
-When you're working on a new functionality, if existing tests fail, don't modify the tests, modify the code to make sure tests pass.
+- if existing tests fail, don't modify the tests, modify the code to make sure tests pass.
 
 Do not overdo tests :
 
@@ -53,6 +56,7 @@ However :
 
 ## Code style
 
+- Follow PEP8 
 - Clean, simple Python. No overengineering.
 - Functions should be atomic.
 - No unnecessary abstractions — a few similar lines are better than a premature helper.
