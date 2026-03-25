@@ -12,7 +12,7 @@ class PgvectorStore:
             pool = ConnectionPool(get_postgres_dsn(), open=True)
         self.pool = pool
 
-    def ensure_collection(self, name: str, dimension: int) -> None:
+    def ensure_collection(self, name: str, dimension: int, sparse: bool = False) -> None:
         with self.pool.connection() as conn:
             conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
             conn.execute(SQL("""
@@ -39,6 +39,7 @@ class PgvectorStore:
         collection: str,
         documents: list[Document],
         vectors: list[list[float]],
+        sparse_vectors=None,
     ) -> None:
         with self.pool.connection() as conn:
             # Clear existing data and insert fresh (reindex semantics)
@@ -61,6 +62,7 @@ class PgvectorStore:
         query_vector: list[float],
         limit: int = 5,
         score_threshold: float | None = None,
+        sparse_query=None,
     ) -> list[dict]:
         vector_str = "[" + ",".join(str(v) for v in query_vector) + "]"
         try:

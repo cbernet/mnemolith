@@ -89,3 +89,43 @@ def test_search_score_threshold(vault_path, mock_embedder, qdrant_store, collect
         score_threshold=high_threshold,
     )
     assert len(filtered) < len(all_results)
+
+
+def test_hybrid_index_and_search(vault_path, mock_embedder, qdrant_store, collection_name):
+    """Hybrid search with BM25 sparse + dense vectors using RRF fusion."""
+    from mnemolith.embeddings import MockSparseEmbedder
+    sparse_embedder = MockSparseEmbedder()
+
+    docs = index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+    assert len(docs) >= 5
+
+    results = search(
+        "simple note",
+        mock_embedder,
+        qdrant_store,
+        collection_name,
+        limit=5,
+        sparse_embedder=sparse_embedder,
+    )
+    assert len(results) > 0
+    assert all("score" in r for r in results)
+    assert all("path" in r for r in results)
+
+
+def test_dense_search_on_named_vector_collection(vault_path, mock_embedder, qdrant_store, collection_name):
+    """Dense-only search still works on a collection indexed with named vectors."""
+    from mnemolith.embeddings import MockSparseEmbedder
+    sparse_embedder = MockSparseEmbedder()
+
+    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+
+    # Search without sparse_embedder — should fall back to dense with using="dense"
+    results = search(
+        "simple note",
+        mock_embedder,
+        qdrant_store,
+        collection_name,
+        limit=5,
+    )
+    assert len(results) > 0
+    assert all("score" in r for r in results)

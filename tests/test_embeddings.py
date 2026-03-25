@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from mnemolith.embeddings import MockEmbedder, OpenAIEmbedder, build_embedder
+from mnemolith.embeddings import MockEmbedder, MockSparseEmbedder, OpenAIEmbedder, SparseVector, build_embedder, build_sparse_embedder
 
 
 def test_mock_embedder_dimension():
@@ -100,3 +100,49 @@ def test_build_embedder_unknown_provider(monkeypatch):
     monkeypatch.setenv("EMBEDDING_PROVIDER", "unknown")
     with pytest.raises(ValueError, match="Unknown embedding provider"):
         build_embedder()
+
+
+def test_mock_sparse_embedder_returns_sparse_vector():
+    e = MockSparseEmbedder()
+    sv = e.embed("hello world")
+    assert isinstance(sv, SparseVector)
+    assert len(sv.indices) > 0
+    assert len(sv.indices) == len(sv.values)
+    assert all(isinstance(i, int) for i in sv.indices)
+    assert all(isinstance(v, float) for v in sv.values)
+
+
+def test_mock_sparse_embedder_deterministic():
+    e = MockSparseEmbedder()
+    sv1 = e.embed("same text")
+    sv2 = e.embed("same text")
+    assert sv1.indices == sv2.indices
+    assert sv1.values == sv2.values
+
+
+def test_mock_sparse_embedder_different_texts():
+    e = MockSparseEmbedder()
+    sv1 = e.embed("text one")
+    sv2 = e.embed("text two")
+    assert sv1.indices != sv2.indices or sv1.values != sv2.values
+
+
+def test_mock_sparse_embedder_embed_batch():
+    e = MockSparseEmbedder()
+    results = e.embed_batch(["hello", "world", "hello"])
+    assert len(results) == 3
+    # deterministic: same text -> same sparse vector
+    assert results[0].indices == results[2].indices
+    assert results[0].values == results[2].values
+
+
+def test_build_sparse_embedder_disabled(monkeypatch):
+    monkeypatch.delenv("SPARSE_SEARCH_ENABLED", raising=False)
+    assert build_sparse_embedder() is None
+
+
+def test_build_sparse_embedder_enabled(monkeypatch):
+    monkeypatch.setenv("SPARSE_SEARCH_ENABLED", "true")
+    from mnemolith.embeddings import BM25Embedder
+    embedder = build_sparse_embedder()
+    assert isinstance(embedder, BM25Embedder)

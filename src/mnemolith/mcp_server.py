@@ -4,7 +4,7 @@ from mcp.server.fastmcp import FastMCP
 
 from mnemolith import pg_store
 from mnemolith.config import get_collection_name, get_vault_path
-from mnemolith.embeddings import build_embedder
+from mnemolith.embeddings import build_embedder, build_sparse_embedder
 from mnemolith.indexer import search as indexer_search
 from mnemolith.pg_store import get_pool, close_pool
 from mnemolith.vector_store import get_vector_store
@@ -64,9 +64,10 @@ def search(query: str, limit: int = 5, score_threshold: float = 0.3) -> str:
     """
     limit = max(1, min(limit, MAX_LIMIT))
     embedder = build_embedder()
+    sparse_embedder = build_sparse_embedder()
     store = get_vector_store()
     collection = get_collection_name()
-    results = indexer_search(query, embedder, store, collection, limit=limit, score_threshold=score_threshold)
+    results = indexer_search(query, embedder, store, collection, limit=limit, score_threshold=score_threshold, sparse_embedder=sparse_embedder)
     return format_results(results)
 
 

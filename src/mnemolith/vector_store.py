@@ -13,13 +13,14 @@ class CollectionNotFoundError(Exception):
 
 
 class VectorStore(Protocol):
-    def ensure_collection(self, name: str, dimension: int) -> None: ...
+    def ensure_collection(self, name: str, dimension: int, sparse: bool = False) -> None: ...
     def delete_collection(self, name: str) -> None: ...
     def upsert_documents(
         self,
         collection: str,
         documents: list[Document],
         vectors: list[list[float]],
+        sparse_vectors=None,
     ) -> None: ...
     def search(
         self,
@@ -27,6 +28,7 @@ class VectorStore(Protocol):
         query_vector: list[float],
         limit: int = 5,
         score_threshold: float | None = None,
+        sparse_query=None,
     ) -> list[dict]: ...
 
 

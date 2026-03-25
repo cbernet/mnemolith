@@ -1,4 +1,5 @@
 import random
+from dataclasses import dataclass
 from typing import Protocol
 
 from mnemolith.config import get_embedding_provider
@@ -48,3 +49,51 @@ class OpenAIEmbedder:
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
         response = self.client.embeddings.create(input=texts, model=self.model)
         return [item.embedding for item in response.data]
+
+
+@dataclass
+class SparseVector:
+    indices: list[int]
+    values: list[float]
+
+
+class SparseEmbedder(Protocol):
+    def embed(self, text: str) -> SparseVector: ...
+    def embed_batch(self, texts: list[str]) -> list[SparseVector]: ...
+
+
+class MockSparseEmbedder:
+    """Deterministic fake sparse embedder for testing. Same text -> same sparse vector."""
+
+    def embed(self, text: str) -> SparseVector:
+        rng = random.Random(text)
+        n = rng.randint(3, 15)
+        indices = sorted(set(rng.randint(0, 999) for _ in range(n)))
+        values = [rng.uniform(0.1, 2.0) for _ in indices]
+        return SparseVector(indices=indices, values=values)
+
+    def embed_batch(self, texts: list[str]) -> list[SparseVector]:
+        return [self.embed(t) for t in texts]
+
+
+class BM25Embedder:
+    """BM25 sparse embedder via fastembed Qdrant/bm25 model."""
+
+    def __init__(self, model: str = "Qdrant/bm25"):
+        from fastembed import SparseTextEmbedding
+        self._model = SparseTextEmbedding(model_name=model)
+
+    def embed(self, text: str) -> SparseVector:
+        result = list(self._model.embed([text]))[0]
+        return SparseVector(indices=result.indices.tolist(), values=result.values.tolist())
+
+    def embed_batch(self, texts: list[str]) -> list[SparseVector]:
+        results = list(self._model.embed(texts))
+        return [SparseVector(indices=r.indices.tolist(), values=r.values.tolist()) for r in results]
+
+
+def build_sparse_embedder() -> "BM25Embedder | None":
+    from mnemolith.config import is_sparse_search_enabled
+    if is_sparse_search_enabled():
+        return BM25Embedder()
+    return None

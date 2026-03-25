@@ -64,6 +64,10 @@ def get_vector_backend() -> str:
     return os.environ.get("VECTOR_BACKEND", "qdrant")
 
 
+def is_sparse_search_enabled() -> bool:
+    return os.environ.get("SPARSE_SEARCH_ENABLED", "").lower() in ("true", "1")
+
+
 def get_backup_dir() -> Path:
     return Path(os.environ.get("BACKUP_DIR", "~/.mnemolith/backups")).expanduser()
 
