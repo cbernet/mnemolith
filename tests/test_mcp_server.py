@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 import mnemolith.mcp_server as _srv
 from mnemolith.mcp_server import (

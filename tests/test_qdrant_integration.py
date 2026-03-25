@@ -167,6 +167,7 @@ def test_hybrid_search_warns_on_score_threshold(vault_path, mock_embedder, qdran
 def test_dense_search_does_not_call_has_named_vectors(vault_path, mock_embedder, qdrant_store, collection_name):
     """After indexing with sparse, dense-only search must use cache, not API call."""
     from unittest.mock import patch
+
     from mnemolith.embeddings import MockSparseEmbedder
     sparse_embedder = MockSparseEmbedder()
 
