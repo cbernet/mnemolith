@@ -89,6 +89,23 @@ def test_search_nonexistent_collection(pgvector_store):
         pgvector_store.search("nonexistent", [1.0, 0.0, 0.0])
 
 
+def test_upsert_sparse_vectors_not_supported(pgvector_store, collection_name, sample_docs):
+    from mnemolith.embeddings import SparseVector
+    pgvector_store.ensure_collection(collection_name, 3)
+    vectors = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]
+    sparse = [SparseVector(indices=[0], values=[1.0]), SparseVector(indices=[1], values=[1.0])]
+    with pytest.raises(NotImplementedError):
+        pgvector_store.upsert_documents(collection_name, sample_docs, vectors, sparse_vectors=sparse)
+
+
+def test_search_sparse_query_not_supported(pgvector_store, collection_name, sample_docs):
+    from mnemolith.embeddings import SparseVector
+    pgvector_store.ensure_collection(collection_name, 3)
+    pgvector_store.upsert_documents(collection_name, sample_docs, [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+    with pytest.raises(NotImplementedError):
+        pgvector_store.search(collection_name, [1.0, 0.0, 0.0], sparse_query=SparseVector(indices=[0], values=[1.0]))
+
+
 def test_upsert_replaces_on_reindex(pgvector_store, collection_name, sample_docs):
     dim = 3
     pgvector_store.ensure_collection(collection_name, dim)

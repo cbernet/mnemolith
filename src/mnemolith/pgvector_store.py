@@ -41,6 +41,8 @@ class PgvectorStore:
         vectors: list[list[float]],
         sparse_vectors=None,
     ) -> None:
+        if sparse_vectors is not None:
+            raise NotImplementedError("pgvector backend does not support sparse vectors")
         with self.pool.connection() as conn:
             # Clear existing data and insert fresh (reindex semantics)
             conn.execute(SQL("DELETE FROM {}").format(Identifier(collection)))
@@ -64,6 +66,8 @@ class PgvectorStore:
         score_threshold: float | None = None,
         sparse_query=None,
     ) -> list[dict]:
+        if sparse_query is not None:
+            raise NotImplementedError("pgvector backend does not support sparse search")
         vector_str = "[" + ",".join(str(v) for v in query_vector) + "]"
         try:
             with self.pool.connection() as conn:
