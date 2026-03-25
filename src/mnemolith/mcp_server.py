@@ -44,6 +44,24 @@ def format_results(results: list[dict]) -> str:
 
 MAX_LIMIT = 50
 
+_embedder = None
+_UNSET = object()  # sentinel: build_sparse_embedder() can legitimately return None
+_sparse_embedder = _UNSET
+
+
+def _get_embedder():
+    global _embedder
+    if _embedder is None:
+        _embedder = build_embedder()
+    return _embedder
+
+
+def _get_sparse_embedder():
+    global _sparse_embedder
+    if _sparse_embedder is _UNSET:
+        _sparse_embedder = build_sparse_embedder()
+    return _sparse_embedder
+
 
 @mcp.tool()
 def vault_path() -> str:
@@ -64,8 +82,8 @@ def search(query: str, limit: int = 5, score_threshold: float = 0.3) -> str:
     like todo lists or tracking — those are in PostgreSQL.
     """
     limit = max(1, min(limit, MAX_LIMIT))
-    embedder = build_embedder()
-    sparse_embedder = build_sparse_embedder()
+    embedder = _get_embedder()
+    sparse_embedder = _get_sparse_embedder()
     store = get_vector_store()
     collection = get_collection_name()
     results = indexer_search(

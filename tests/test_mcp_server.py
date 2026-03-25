@@ -1,5 +1,7 @@
+import pytest
 from unittest.mock import patch
 
+import mnemolith.mcp_server as _srv
 from mnemolith.mcp_server import (
     format_results,
     pg_create_table,
@@ -10,6 +12,16 @@ from mnemolith.mcp_server import (
     search,
     vault_path,
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_embedder_singletons():
+    """Reset module-level embedder singletons before each test to prevent cross-test leakage."""
+    _srv._embedder = None
+    _srv._sparse_embedder = _srv._UNSET
+    yield
+    _srv._embedder = None
+    _srv._sparse_embedder = _srv._UNSET
 
 
 def _make_results():
@@ -137,3 +149,16 @@ def test_pg_mutate(mock_get_pool, mock_pg_store):
     result = pg_mutate("DELETE FROM groceries WHERE done = true")
     assert "3" in result
     assert "row" in result
+
+
+@patch("mnemolith.mcp_server.build_sparse_embedder")
+@patch("mnemolith.mcp_server.build_embedder")
+@patch("mnemolith.mcp_server.indexer_search", return_value=[])
+@patch("mnemolith.mcp_server.get_vector_store")
+@patch("mnemolith.mcp_server.get_collection_name")
+def test_embedders_initialized_once(mock_col, mock_store, mock_search, mock_build_emb, mock_build_sparse):
+    """build_embedder and build_sparse_embedder must each be called only once across searches."""
+    search("first query")
+    search("second query")
+    mock_build_emb.assert_called_once()
+    mock_build_sparse.assert_called_once()
