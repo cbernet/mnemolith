@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 import pytest
@@ -141,6 +142,26 @@ def test_hybrid_search_ignores_score_threshold(vault_path, mock_embedder, qdrant
         sparse_embedder=sparse_embedder,
     )
     assert len(results) == len(all_results)
+
+
+def test_hybrid_search_warns_on_score_threshold(vault_path, mock_embedder, qdrant_store, collection_name, caplog):
+    """A warning must be emitted when score_threshold is passed for hybrid search."""
+    from mnemolith.embeddings import MockSparseEmbedder
+    sparse_embedder = MockSparseEmbedder()
+
+    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+
+    with caplog.at_level(logging.WARNING, logger="mnemolith.qdrant_store"):
+        search(
+            "simple note",
+            mock_embedder,
+            qdrant_store,
+            collection_name,
+            limit=5,
+            score_threshold=0.5,
+            sparse_embedder=sparse_embedder,
+        )
+    assert any("score_threshold" in msg for msg in caplog.messages)
 
 
 def test_dense_search_does_not_call_has_named_vectors(vault_path, mock_embedder, qdrant_store, collection_name):

@@ -1,3 +1,5 @@
+import logging
+
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
@@ -13,6 +15,8 @@ from qdrant_client.models import (
 from mnemolith.embeddings import SparseVector as EmbSparseVector
 from mnemolith.parser import Document
 from mnemolith.vector_store import CollectionNotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 class QdrantStore:
@@ -106,9 +110,21 @@ class QdrantStore:
         score_threshold: float | None = None,
         sparse_query: EmbSparseVector | None = None,
     ) -> list[dict]:
+        """Search the collection for similar documents.
+
+        When sparse_query is provided, hybrid search is performed using RRF
+        (Reciprocal Rank Fusion). RRF scores are rank-based (~1/(1+rank)) and are
+        not comparable to cosine similarity values. score_threshold is therefore
+        ignored in hybrid mode; a warning is logged if one is passed.
+        """
         from qdrant_client.http.exceptions import UnexpectedResponse
         try:
             if sparse_query is not None:
+                if score_threshold is not None:
+                    logger.warning(
+                        "score_threshold is ignored for hybrid search "
+                        "(RRF scores are rank-based, not cosine similarity)"
+                    )
                 # Hybrid search: prefetch dense + sparse, fuse with RRF
                 prefetch_limit = max(limit * 4, 20)
                 results = self.client.query_points(

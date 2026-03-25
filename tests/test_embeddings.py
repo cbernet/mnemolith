@@ -174,3 +174,20 @@ def test_build_sparse_embedder_enabled(monkeypatch):
         result = build_sparse_embedder()
         mock_cls.assert_called_once()
         assert result is mock_cls.return_value
+
+
+@pytest.mark.integration
+def test_bm25_embedder_produces_valid_sparse_vectors():
+    """Real BM25Embedder via fastembed — verifies non-empty indices/values."""
+    from mnemolith.embeddings import BM25Embedder
+    e = BM25Embedder()
+    sv = e.embed("the quick brown fox jumps over the lazy dog")
+    assert isinstance(sv, SparseVector)
+    assert len(sv.indices) > 0
+    assert len(sv.indices) == len(sv.values)
+    assert all(isinstance(i, int) for i in sv.indices)
+    assert all(isinstance(v, float) for v in sv.values)
+    # batch: same text -> same sparse vector
+    results = e.embed_batch(["hello world", "hello world"])
+    assert results[0].indices == results[1].indices
+    assert results[0].values == results[1].values
