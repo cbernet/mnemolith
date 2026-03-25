@@ -48,6 +48,27 @@ class QdrantStore:
         info = self.client.get_collection(collection)
         return isinstance(info.config.params.vectors, dict)
 
+    def _make_point(
+        self,
+        i: int,
+        doc: Document,
+        vector: list[float],
+        sv: EmbSparseVector | None = None,
+    ) -> PointStruct:
+        payload = {
+            "path": doc.path,
+            "title": doc.title,
+            "content": doc.content,
+            "tags": doc.tags,
+            "links": doc.links,
+            "heading": doc.heading,
+        }
+        if sv is not None:
+            vec = {"dense": vector, "sparse": SparseVector(indices=sv.indices, values=sv.values)}
+        else:
+            vec = vector
+        return PointStruct(id=i, vector=vec, payload=payload)
+
     def upsert_documents(
         self,
         collection: str,
@@ -57,40 +78,12 @@ class QdrantStore:
     ) -> None:
         if sparse_vectors is not None:
             points = [
-                PointStruct(
-                    id=i,
-                    vector={
-                        "dense": vector,
-                        "sparse": SparseVector(
-                            indices=sv.indices,
-                            values=sv.values,
-                        ),
-                    },
-                    payload={
-                        "path": doc.path,
-                        "title": doc.title,
-                        "content": doc.content,
-                        "tags": doc.tags,
-                        "links": doc.links,
-                        "heading": doc.heading,
-                    },
-                )
+                self._make_point(i, doc, vector, sv)
                 for i, (doc, vector, sv) in enumerate(zip(documents, vectors, sparse_vectors))
             ]
         else:
             points = [
-                PointStruct(
-                    id=i,
-                    vector=vector,
-                    payload={
-                        "path": doc.path,
-                        "title": doc.title,
-                        "content": doc.content,
-                        "tags": doc.tags,
-                        "links": doc.links,
-                        "heading": doc.heading,
-                    },
-                )
+                self._make_point(i, doc, vector)
                 for i, (doc, vector) in enumerate(zip(documents, vectors))
             ]
         self.client.upsert(collection_name=collection, points=points)

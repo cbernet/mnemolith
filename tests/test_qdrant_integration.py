@@ -5,7 +5,6 @@ import pytest
 from mnemolith.indexer import index_vault, search
 from mnemolith.qdrant_store import QdrantStore
 
-
 pytestmark = pytest.mark.integration
 
 

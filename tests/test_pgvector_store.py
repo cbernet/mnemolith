@@ -4,7 +4,6 @@ from mnemolith.parser import Document
 from mnemolith.pgvector_store import PgvectorStore
 from mnemolith.vector_store import CollectionNotFoundError
 
-
 pytestmark = pytest.mark.pgvector_integration
 
 

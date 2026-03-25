@@ -1,11 +1,11 @@
 from mnemolith.parser import (
     Document,
-    parse_frontmatter,
-    extract_links,
-    extract_inline_tags,
-    parse_vault,
     build_embedding_text,
     chunk_document,
+    extract_inline_tags,
+    extract_links,
+    parse_frontmatter,
+    parse_vault,
 )
 
 

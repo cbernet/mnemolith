@@ -3,10 +3,10 @@ import sys
 from pathlib import Path
 
 from mnemolith.backup import create_backup, restore_backup
-from mnemolith.config import get_vault_path, get_collection_name
+from mnemolith.config import get_collection_name, get_vault_path
 from mnemolith.embeddings import build_embedder, build_sparse_embedder
 from mnemolith.indexer import index_vault, search
-from mnemolith.vector_store import get_vector_store, CollectionNotFoundError
+from mnemolith.vector_store import CollectionNotFoundError, get_vector_store
 
 MAX_LIMIT = 50
 
@@ -19,7 +19,10 @@ def cmd_index(args):
     embedder = build_embedder()
     sparse_embedder = build_sparse_embedder()
     store = get_vector_store()
-    chunks = index_vault(vault_path, embedder, store, get_collection_name(), clean=args.clean, sparse_embedder=sparse_embedder)
+    chunks = index_vault(
+        vault_path, embedder, store, get_collection_name(),
+        clean=args.clean, sparse_embedder=sparse_embedder,
+    )
     print(f"Indexed {len(chunks)} chunks.")
 
 
@@ -30,7 +33,10 @@ def cmd_search(args):
     collection = get_collection_name()
     limit = max(1, min(args.limit, MAX_LIMIT))
     try:
-        results = search(args.query, embedder, store, collection, limit=limit, score_threshold=args.score_threshold, sparse_embedder=sparse_embedder)
+        results = search(
+            args.query, embedder, store, collection,
+            limit=limit, score_threshold=args.score_threshold, sparse_embedder=sparse_embedder,
+        )
     except CollectionNotFoundError:
         print(f"Collection '{collection}' not found. Run 'mnemolith index' first.")
         sys.exit(1)
@@ -41,6 +47,7 @@ def cmd_search(args):
         print(f"[{r['score']:.3f}] {r['path']}: {r['title']}{heading}")
         print("\n")
         print(r["content"])
+
 
 def cmd_backup(args):
     backup_dir = Path(args.dir) if args.dir else None

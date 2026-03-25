@@ -7,10 +7,10 @@ import httpx
 
 from mnemolith.config import (
     get_backup_dir,
-    get_postgres_conn_params,
-    get_qdrant_url,
     get_collection_name,
+    get_postgres_conn_params,
     get_qdrant_api_key,
+    get_qdrant_url,
 )
 
 PG_DUMP_FILE = "pg_dump.sql"
@@ -79,12 +79,11 @@ def backup_qdrant(backup_path: Path) -> Path:
 
     url = f"{get_qdrant_url()}/collections/{collection}/snapshots/{snapshot.name}"
     snapshot_file = backup_path / QDRANT_SNAPSHOT_FILE
-    with httpx.Client() as http:
-        with http.stream("GET", url, headers=_qdrant_headers()) as response:
-            response.raise_for_status()
-            with open(snapshot_file, "wb") as f:
-                for chunk in response.iter_bytes():
-                    f.write(chunk)
+    with httpx.Client() as http, http.stream("GET", url, headers=_qdrant_headers()) as response:
+        response.raise_for_status()
+        with open(snapshot_file, "wb") as f:
+            for chunk in response.iter_bytes():
+                f.write(chunk)
     return snapshot_file
 
 

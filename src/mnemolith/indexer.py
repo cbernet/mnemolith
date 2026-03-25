@@ -1,5 +1,5 @@
-from mnemolith.parser import Document, parse_vault, build_embedding_text, chunk_document
 from mnemolith.embeddings import Embedder
+from mnemolith.parser import Document, build_embedding_text, chunk_document, parse_vault
 from mnemolith.vector_store import VectorStore
 
 

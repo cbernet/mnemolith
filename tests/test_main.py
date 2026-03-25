@@ -1,11 +1,11 @@
 import subprocess
 import sys
 from argparse import Namespace
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 import pytest
 
-from mnemolith.main import cmd_index, cmd_search, cmd_backup, cmd_restore
+from mnemolith.main import cmd_backup, cmd_index, cmd_restore, cmd_search
 from mnemolith.vector_store import CollectionNotFoundError
 
 

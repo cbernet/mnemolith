@@ -3,7 +3,6 @@ import pytest
 from mnemolith.indexer import index_vault, search
 from mnemolith.pgvector_store import PgvectorStore
 
-
 pytestmark = pytest.mark.pgvector_integration
 
 

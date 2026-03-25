@@ -4,7 +4,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from mnemolith.embeddings import MockEmbedder, MockSparseEmbedder, OpenAIEmbedder, SparseVector, build_embedder, build_sparse_embedder
+from mnemolith.embeddings import (
+    MockEmbedder,
+    MockSparseEmbedder,
+    OpenAIEmbedder,
+    SparseVector,
+    build_embedder,
+    build_sparse_embedder,
+)
 
 
 def test_mock_embedder_dimension():
@@ -92,7 +99,7 @@ def test_openai_embedder_embed_batch_splits_large_input():
             r.data = [Mock(embedding=[float(i)]) for i in range(len(texts))]
             return r
 
-        mock_client.embeddings.create.side_effect = lambda input, model: make_response(input)
+        mock_client.embeddings.create.side_effect = lambda input, model, **_: make_response(input)  # noqa: A006
 
         e = OpenAIEmbedder(model="text-embedding-3-small", dimension=1)
         texts = [f"text {i}" for i in range(250)]

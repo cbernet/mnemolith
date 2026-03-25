@@ -72,7 +72,7 @@ class MockSparseEmbedder:
     def embed(self, text: str) -> SparseVector:
         rng = random.Random(text)
         n = rng.randint(3, 15)
-        indices = sorted(set(rng.randint(0, 999) for _ in range(n)))
+        indices = sorted({rng.randint(0, 999) for _ in range(n)})
         values = [rng.uniform(0.1, 2.0) for _ in indices]
         return SparseVector(indices=indices, values=values)
 
@@ -88,7 +88,7 @@ class BM25Embedder:
         self._model = SparseTextEmbedding(model_name=model)
 
     def embed(self, text: str) -> SparseVector:
-        result = list(self._model.embed([text]))[0]
+        result = next(iter(self._model.embed([text])))
         return SparseVector(indices=result.indices.tolist(), values=result.values.tolist())
 
     def embed_batch(self, texts: list[str]) -> list[SparseVector]:

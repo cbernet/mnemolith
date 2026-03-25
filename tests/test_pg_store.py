@@ -1,13 +1,13 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from mnemolith.pg_store import (
-    list_tables,
     describe_table,
     execute_ddl,
-    execute_query,
     execute_mutate,
+    execute_query,
+    list_tables,
 )
 
 
@@ -25,21 +25,21 @@ def mock_pool():
 
 
 def test_list_tables(mock_pool):
-    pool, conn, cursor = mock_pool
+    pool, _conn, cursor = mock_pool
     cursor.fetchall.return_value = [("groceries",), ("todos",)]
     result = list_tables(pool)
     assert result == ["groceries", "todos"]
 
 
 def test_list_tables_empty(mock_pool):
-    pool, conn, cursor = mock_pool
+    pool, _conn, cursor = mock_pool
     cursor.fetchall.return_value = []
     result = list_tables(pool)
     assert result == []
 
 
 def test_describe_table(mock_pool):
-    pool, conn, cursor = mock_pool
+    pool, _conn, cursor = mock_pool
     cursor.fetchall.return_value = [
         ("id", "integer", "NO"),
         ("name", "text", "YES"),
@@ -58,7 +58,7 @@ def test_describe_table(mock_pool):
     "DROP TABLE IF EXISTS test CASCADE",
 ])
 def test_execute_ddl_allows_valid_ddl(mock_pool, sql):
-    pool, conn, cursor = mock_pool
+    pool, conn, _cursor = mock_pool
     execute_ddl(pool, sql)
     conn.execute.assert_called_once()
 
@@ -72,13 +72,13 @@ def test_execute_ddl_allows_valid_ddl(mock_pool, sql):
     "LOAD '/tmp/evil.so'",
 ])
 def test_execute_ddl_rejects_non_ddl(mock_pool, sql):
-    pool, conn, cursor = mock_pool
+    pool, _conn, _cursor = mock_pool
     with pytest.raises(ValueError, match="Only CREATE TABLE"):
         execute_ddl(pool, sql)
 
 
 def test_execute_query(mock_pool):
-    pool, conn, cursor = mock_pool
+    pool, _conn, cursor = mock_pool
     cursor.description = [("id",), ("name",)]
     cursor.fetchall.return_value = [(1, "milk"), (2, "bread")]
     result = execute_query(pool, "SELECT * FROM groceries")
@@ -89,7 +89,7 @@ def test_execute_query(mock_pool):
 
 
 def test_execute_query_no_results(mock_pool):
-    pool, conn, cursor = mock_pool
+    pool, _conn, cursor = mock_pool
     cursor.description = [("id",), ("name",)]
     cursor.fetchall.return_value = []
     result = execute_query(pool, "SELECT * FROM groceries")
@@ -97,7 +97,7 @@ def test_execute_query_no_results(mock_pool):
 
 
 def test_execute_mutate(mock_pool):
-    pool, conn, cursor = mock_pool
+    pool, _conn, cursor = mock_pool
     cursor.rowcount = 3
     result = execute_mutate(pool, "DELETE FROM groceries WHERE done = true")
     assert result == 3

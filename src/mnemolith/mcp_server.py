@@ -1,3 +1,4 @@
+import atexit
 import logging
 
 from mcp.server.fastmcp import FastMCP
@@ -6,7 +7,7 @@ from mnemolith import pg_store
 from mnemolith.config import get_collection_name, get_vault_path
 from mnemolith.embeddings import build_embedder, build_sparse_embedder
 from mnemolith.indexer import search as indexer_search
-from mnemolith.pg_store import get_pool, close_pool
+from mnemolith.pg_store import close_pool, get_pool
 from mnemolith.vector_store import get_vector_store
 
 logging.basicConfig(
@@ -67,7 +68,10 @@ def search(query: str, limit: int = 5, score_threshold: float = 0.3) -> str:
     sparse_embedder = build_sparse_embedder()
     store = get_vector_store()
     collection = get_collection_name()
-    results = indexer_search(query, embedder, store, collection, limit=limit, score_threshold=score_threshold, sparse_embedder=sparse_embedder)
+    results = indexer_search(
+        query, embedder, store, collection,
+        limit=limit, score_threshold=score_threshold, sparse_embedder=sparse_embedder,
+    )
     return format_results(results)
 
 
@@ -96,7 +100,8 @@ def pg_describe_table(table_name: str) -> str:
 
 @mcp.tool()
 def pg_create_table(sql: str) -> str:
-    """Execute a DDL statement (CREATE TABLE, ALTER TABLE, DROP TABLE) on the user's personal PostgreSQL database. Requires human approval."""
+    """Execute a DDL statement (CREATE TABLE, ALTER TABLE, DROP TABLE) on the user's personal
+    PostgreSQL database. Requires human approval."""
     pg_store.execute_ddl(get_pool(), sql)
     return "OK"
 
@@ -123,15 +128,15 @@ def pg_query(sql: str, params: str | None = None) -> str:
 
 @mcp.tool()
 def pg_mutate(sql: str, params: str | None = None) -> str:
-    """Run a data modification query (INSERT, UPDATE, DELETE) on the user's personal PostgreSQL database. Returns affected row count."""
+    """Run a data modification query (INSERT, UPDATE, DELETE) on the user's personal PostgreSQL
+    database. Returns affected row count."""
     p = tuple(params.split(",")) if params else None
     count = pg_store.execute_mutate(get_pool(), sql, p)
     return f"{count} row(s) affected."
 
 
-import atexit
-
 atexit.register(close_pool)
+
 
 
 def main():

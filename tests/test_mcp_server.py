@@ -1,14 +1,14 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from mnemolith.mcp_server import (
     format_results,
+    pg_create_table,
+    pg_describe_table,
+    pg_list_tables,
+    pg_mutate,
+    pg_query,
     search,
     vault_path,
-    pg_list_tables,
-    pg_describe_table,
-    pg_create_table,
-    pg_query,
-    pg_mutate,
 )
 
 

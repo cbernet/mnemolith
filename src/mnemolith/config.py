@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from urllib.parse import quote_plus, urlparse, unquote
+from urllib.parse import quote_plus, unquote, urlparse
 
 from dotenv import load_dotenv
 
@@ -11,7 +11,7 @@ def get_vault_path() -> str:
     """Return the Obsidian vault path from OBSIDIAN_VAULT_PATH env var."""
     vault_path = os.environ.get("OBSIDIAN_VAULT_PATH")
     if not vault_path:
-        raise EnvironmentError(
+        raise OSError(
             "OBSIDIAN_VAULT_PATH environment variable is not set. "
             "Set it to the absolute path of your Obsidian vault."
         )
@@ -21,21 +21,21 @@ def get_vault_path() -> str:
 def get_qdrant_url() -> str:
     url = os.environ.get("QDRANT_URL")
     if not url:
-        raise EnvironmentError("QDRANT_URL environment variable is not set.")
+        raise OSError("QDRANT_URL environment variable is not set.")
     return url
 
 
 def get_collection_name() -> str:
     name = os.environ.get("COLLECTION_NAME")
     if not name:
-        raise EnvironmentError("COLLECTION_NAME environment variable is not set.")
+        raise OSError("COLLECTION_NAME environment variable is not set.")
     return name
 
 
 def get_embedding_provider() -> str:
     provider = os.environ.get("EMBEDDING_PROVIDER")
     if not provider:
-        raise EnvironmentError("EMBEDDING_PROVIDER environment variable is not set.")
+        raise OSError("EMBEDDING_PROVIDER environment variable is not set.")
     return provider
 
 
@@ -49,7 +49,7 @@ def get_postgres_dsn() -> str:
     host = os.environ.get("POSTGRES_HOST", "localhost")
     port = os.environ.get("POSTGRES_PORT", "5432")
     if not all([user, password, db]):
-        raise EnvironmentError(
+        raise OSError(
             "Set either POSTGRES_DSN or POSTGRES_USER + POSTGRES_PASSWORD + POSTGRES_DB."
         )
     return f"postgresql://{quote_plus(user)}:{quote_plus(password)}@{host}:{port}/{db}"
@@ -91,6 +91,6 @@ def get_postgres_conn_params() -> dict[str, str]:
             "password": unquote(parsed.password or ""),
             "dbname": parsed.path.lstrip("/"),
         }
-    raise EnvironmentError(
+    raise OSError(
         "Set either POSTGRES_DSN or POSTGRES_USER + POSTGRES_PASSWORD + POSTGRES_DB."
     )
