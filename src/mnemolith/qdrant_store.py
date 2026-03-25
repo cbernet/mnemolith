@@ -24,6 +24,7 @@ class QdrantStore:
             from mnemolith.config import get_qdrant_api_key
             api_key = get_qdrant_api_key()
         self.client = QdrantClient(url=url, api_key=api_key)
+        self._named_vector_collections: set[str] = set()
 
     def ensure_collection(self, name: str, dimension: int, sparse: bool = False) -> None:
         collections = [c.name for c in self.client.get_collections().collections]
@@ -35,6 +36,7 @@ class QdrantStore:
                 vectors_config={"dense": VectorParams(size=dimension, distance=Distance.COSINE)},
                 sparse_vectors_config={"sparse": SparseVectorParams()},
             )
+            self._named_vector_collections.add(name)
         else:
             self.client.create_collection(
                 collection_name=name,
@@ -119,7 +121,7 @@ class QdrantStore:
                     # score_threshold is not applied for RRF: RRF scores are rank-based
                     # (1/(1+rank)) and not comparable to cosine similarity thresholds.
                 )
-            elif self._has_named_vectors(collection):
+            elif collection in self._named_vector_collections:
                 # Dense-only on a named-vector collection: must specify using="dense"
                 results = self.client.query_points(
                     collection_name=collection,

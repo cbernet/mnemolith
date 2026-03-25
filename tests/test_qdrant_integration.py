@@ -143,6 +143,19 @@ def test_hybrid_search_ignores_score_threshold(vault_path, mock_embedder, qdrant
     assert len(results) == len(all_results)
 
 
+def test_dense_search_does_not_call_has_named_vectors(vault_path, mock_embedder, qdrant_store, collection_name):
+    """After indexing with sparse, dense-only search must use cache, not API call."""
+    from unittest.mock import patch
+    from mnemolith.embeddings import MockSparseEmbedder
+    sparse_embedder = MockSparseEmbedder()
+
+    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+
+    with patch.object(qdrant_store, "_has_named_vectors", wraps=qdrant_store._has_named_vectors) as mock_hnv:
+        search("simple note", mock_embedder, qdrant_store, collection_name, limit=5)
+        mock_hnv.assert_not_called()
+
+
 def test_dense_search_on_named_vector_collection(vault_path, mock_embedder, qdrant_store, collection_name):
     """Dense-only search still works on a collection indexed with named vectors."""
     from mnemolith.embeddings import MockSparseEmbedder
