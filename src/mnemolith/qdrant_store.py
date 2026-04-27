@@ -100,7 +100,9 @@ class QdrantStore:
                 self._make_point(i, doc, vector)
                 for i, (doc, vector) in enumerate(zip(documents, vectors))
             ]
-        self.client.upsert(collection_name=collection, points=points)
+        batch_size = 100
+        for i in range(0, len(points), batch_size):
+            self.client.upsert(collection_name=collection, points=points[i:i + batch_size])
 
     def search(
         self,
