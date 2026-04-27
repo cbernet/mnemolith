@@ -7,13 +7,14 @@
 - [x] Configurable backup directory (`BACKUP_DIR`, default `~/.mnemolith/backups/`)
 - [x] Timestamped backup folders with `pg_dump.sql` + `qdrant_snapshot.snapshot`
 
-## Incremental Indexing (low priority, indexing still cheap and fast)
+## Incremental Indexing
 
-- [ ] Store `file_hash` (content hash) in Qdrant point payloads
-- [ ] On index: detect new, modified, deleted files vs existing Qdrant state
-- [ ] Only embed and upsert changed files, delete vectors for removed files
-- [ ] `mnemolith index` incremental by default, `--full` flag for full rebuild
-- [ ] make sure vectors corresponding to deleted notes are removed
+- [x] Per-file content hash tracked in `vault_index_state` (PostgreSQL)
+- [x] On index: detect new, modified, deleted files vs stored state
+- [x] Only embed and upsert changed files, delete vectors for removed files
+- [x] `mnemolith index` incremental by default, `--full` flag for full rebuild
+- [x] Vectors for deleted notes are evicted via `delete_by_paths`
+- [ ] Rename optimization: detect renames by hash and update payloads in place (skip re-embed)
 
 ## Maintenance
 

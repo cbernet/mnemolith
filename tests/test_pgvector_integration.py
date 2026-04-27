@@ -20,8 +20,8 @@ def collection_name():
     return "test_docs"
 
 
-def test_index_and_search(vault_path, mock_embedder, pgvector_store, collection_name):
-    docs = index_vault(vault_path, mock_embedder, pgvector_store, collection_name)
+def test_index_and_search(vault_path, mock_embedder, pgvector_store, collection_name, pg_pool):
+    docs = index_vault(vault_path, mock_embedder, pgvector_store, collection_name, state_pool=pg_pool)
     assert len(docs) >= 5
 
     results = search(
@@ -36,13 +36,13 @@ def test_index_and_search(vault_path, mock_embedder, pgvector_store, collection_
     assert all("path" in r for r in results)
 
 
-def test_index_empty_vault(tmp_path, mock_embedder, pgvector_store, collection_name):
-    docs = index_vault(str(tmp_path), mock_embedder, pgvector_store, collection_name)
+def test_index_empty_vault(tmp_path, mock_embedder, pgvector_store, collection_name, pg_pool):
+    docs = index_vault(str(tmp_path), mock_embedder, pgvector_store, collection_name, state_pool=pg_pool)
     assert docs == []
 
 
-def test_search_returns_ranked_results(vault_path, mock_embedder, pgvector_store, collection_name):
-    index_vault(vault_path, mock_embedder, pgvector_store, collection_name)
+def test_search_returns_ranked_results(vault_path, mock_embedder, pgvector_store, collection_name, pg_pool):
+    index_vault(vault_path, mock_embedder, pgvector_store, collection_name, state_pool=pg_pool)
 
     results = search(
         "simple note with basic content",
@@ -56,8 +56,8 @@ def test_search_returns_ranked_results(vault_path, mock_embedder, pgvector_store
     assert scores == sorted(scores, reverse=True)
 
 
-def test_search_score_threshold(vault_path, mock_embedder, pgvector_store, collection_name):
-    index_vault(vault_path, mock_embedder, pgvector_store, collection_name)
+def test_search_score_threshold(vault_path, mock_embedder, pgvector_store, collection_name, pg_pool):
+    index_vault(vault_path, mock_embedder, pgvector_store, collection_name, state_pool=pg_pool)
 
     all_results = search(
         "simple note",

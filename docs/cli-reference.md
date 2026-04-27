@@ -4,10 +4,10 @@ Mnemolith provides four commands: `index`, `search`, `backup`, and `restore`.
 
 ## `mnemolith index`
 
-Parse, chunk, embed, and store your vault in Qdrant.
+Parse, chunk, embed, and store your vault in the configured vector store. **Incremental by default** — only new or modified files are re-embedded; vectors for deleted files are evicted.
 
 ```bash
-uv run mnemolith index [vault_path]
+uv run mnemolith index [vault_path] [--full]
 ```
 
 **Arguments:**
@@ -15,32 +15,44 @@ uv run mnemolith index [vault_path]
 | Argument | Description | Default |
 |---|---|---|
 | `vault_path` | Path to the Obsidian vault | `OBSIDIAN_VAULT_PATH` env var |
+| `--full` | Drop the collection and rebuild from scratch | off |
 
 If `vault_path` is provided, it takes precedence over the environment variable.
 
-**What it does:**
+**What it does (incremental run):**
 
-1. Scans all `.md` files in the vault recursively
-2. Parses each file: extracts frontmatter, wiki-links, tags, and content
-3. Splits documents into chunks at `##` heading boundaries
-4. Embeds each chunk via the configured embedding provider
-5. Upserts all vectors into Qdrant (creates the collection if it doesn't exist)
+1. Scans all `.md` files in the vault recursively and computes a content hash for each
+2. Compares hashes against the `vault_index_state` table in PostgreSQL to find added, modified, and deleted files
+3. Evicts vectors for deleted and modified files via `delete_by_paths`
+4. Embeds and upserts only the chunks of added/modified files
+5. Updates `vault_index_state` to reflect the new vault snapshot
+
+**What `--full` does:**
+
+Drops the collection, resets the state table, and rebuilds everything from scratch. Use this when:
+
+- Migrating from a pre-incremental version of mnemolith (the first run after upgrade refuses incremental and asks you to run `--full` once).
+- The chunking logic changes (mnemolith bumps a `SCHEMA_VERSION` constant in this case, which auto-invalidates state — but `--full` is the safe override).
+- You want a clean slate.
 
 **Example:**
 
 ```bash
-# Using env var
+# Incremental (default) — fast, only embeds what changed
 uv run mnemolith index
 
-# Explicit path
+# Full rebuild — re-embeds everything
+uv run mnemolith index --full
+
+# Explicit vault path
 uv run mnemolith index ~/Obsidian\ Vault
 ```
 
 **Notes:**
 
-- Indexing upserts vectors using sequential IDs — existing points at the same IDs are replaced, but points at IDs that no longer exist (e.g. from deleted notes) are **not** removed
-- To fully reset the index, delete the Qdrant collection and re-run `index`
-- Re-run after adding or editing notes to keep the index up to date
+- Re-run after adding, editing, or deleting notes to keep the index up to date — the diff is fast, only changed files are re-embedded.
+- The deprecated `--clean` flag still works as an alias for `--full` but will be removed in a future release.
+- Renaming a file is treated as delete + add — the renamed file's chunks are re-embedded even though content is unchanged.
 
 ## `mnemolith search`
 

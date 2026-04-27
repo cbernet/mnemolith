@@ -3,8 +3,12 @@ import logging
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
+    FieldCondition,
+    Filter,
+    FilterSelector,
     Fusion,
     FusionQuery,
+    MatchAny,
     PointStruct,
     Prefetch,
     SparseVector,
@@ -13,7 +17,7 @@ from qdrant_client.models import (
 )
 
 from mnemolith.embeddings import SparseVector as EmbSparseVector
-from mnemolith.parser import Document
+from mnemolith.parser import Document, chunk_id
 from mnemolith.vector_store import CollectionNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -58,13 +62,24 @@ class QdrantStore:
     def delete_collection(self, name: str) -> None:
         self.client.delete_collection(collection_name=name)
 
+    def delete_by_paths(self, collection: str, paths: list[str]) -> None:
+        if not paths:
+            return
+        self.client.delete(
+            collection_name=collection,
+            points_selector=FilterSelector(
+                filter=Filter(
+                    must=[FieldCondition(key="path", match=MatchAny(any=paths))],
+                ),
+            ),
+        )
+
     def _has_named_vectors(self, collection: str) -> bool:
         info = self.client.get_collection(collection)
         return isinstance(info.config.params.vectors, dict)
 
     def _make_point(
         self,
-        i: int,
         doc: Document,
         vector: list[float],
         sv: EmbSparseVector | None = None,
@@ -81,7 +96,7 @@ class QdrantStore:
             vec = {"dense": vector, "sparse": SparseVector(indices=sv.indices, values=sv.values)}
         else:
             vec = vector
-        return PointStruct(id=i, vector=vec, payload=payload)
+        return PointStruct(id=chunk_id(doc.path, doc.chunk_index), vector=vec, payload=payload)
 
     def upsert_documents(
         self,
@@ -92,17 +107,26 @@ class QdrantStore:
     ) -> None:
         if sparse_vectors is not None:
             points = [
-                self._make_point(i, doc, vector, sv)
-                for i, (doc, vector, sv) in enumerate(zip(documents, vectors, sparse_vectors))
+                self._make_point(doc, vector, sv)
+                for doc, vector, sv in zip(documents, vectors, sparse_vectors)
             ]
         else:
             points = [
-                self._make_point(i, doc, vector)
-                for i, (doc, vector) in enumerate(zip(documents, vectors))
+                self._make_point(doc, vector)
+                for doc, vector in zip(documents, vectors)
             ]
         batch_size = 100
         for i in range(0, len(points), batch_size):
             self.client.upsert(collection_name=collection, points=points[i:i + batch_size])
+
+    def count_points(self, collection: str) -> int:
+        from qdrant_client.http.exceptions import UnexpectedResponse
+        try:
+            return self.client.count(collection_name=collection).count
+        except UnexpectedResponse as e:
+            if e.status_code == 404:
+                return 0
+            raise
 
     def search(
         self,

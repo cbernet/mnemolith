@@ -16,12 +16,16 @@ def cmd_index(args):
     if not Path(vault_path).is_dir():
         print(f"Error: '{vault_path}' is not a valid directory.")
         sys.exit(1)
+    full = args.full
+    if args.clean:
+        print("warning: --clean is deprecated, use --full instead.")
+        full = True
     embedder = build_embedder()
     sparse_embedder = build_sparse_embedder()
     store = get_vector_store()
     chunks = index_vault(
         vault_path, embedder, store, get_collection_name(),
-        clean=args.clean, sparse_embedder=sparse_embedder,
+        full=full, sparse_embedder=sparse_embedder,
     )
     print(f"Indexed {len(chunks)} chunks.")
 
@@ -68,9 +72,11 @@ def main():
     parser = argparse.ArgumentParser(prog="mnemolith")
     sub = parser.add_subparsers(dest="command")
 
-    index_p = sub.add_parser("index", help="Index vault into vector store")
+    index_p = sub.add_parser("index", help="Index vault into vector store (incremental by default)")
     index_p.add_argument("vault_path", nargs="?", help="Path to vault (or use OBSIDIAN_VAULT_PATH)")
-    index_p.add_argument("--clean", action="store_true", help="Delete and recreate the collection before indexing")
+    index_p.add_argument("--full", action="store_true",
+                         help="Drop the collection and rebuild from scratch")
+    index_p.add_argument("--clean", action="store_true", help=argparse.SUPPRESS)
     index_p.set_defaults(func=cmd_index)
 
     search_p = sub.add_parser("search", help="Search indexed documents")

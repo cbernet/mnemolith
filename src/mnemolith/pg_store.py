@@ -1,3 +1,4 @@
+import atexit
 import re
 
 from psycopg_pool import ConnectionPool
@@ -18,6 +19,7 @@ def get_pool(dsn: str | None = None) -> ConnectionPool:
         if dsn is None:
             dsn = get_postgres_dsn()
         _pool = ConnectionPool(dsn, open=True, reset=_reset_connection)
+        atexit.register(close_pool)
     return _pool
 
 
