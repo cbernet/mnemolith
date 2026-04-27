@@ -1,3 +1,4 @@
+from psycopg import errors as pg_errors
 from psycopg.sql import SQL, Identifier
 from psycopg_pool import ConnectionPool
 
@@ -54,26 +55,31 @@ class PgvectorStore:
     ) -> None:
         if sparse_vectors is not None:
             raise NotImplementedError("pgvector backend does not support sparse vectors")
-        with self.pool.connection() as conn:
-            for doc, vector in zip(documents, vectors):
-                vector_str = "[" + ",".join(str(v) for v in vector) + "]"
-                conn.execute(
-                    SQL("""
-                        INSERT INTO {} (id, embedding, path, title, content, tags, links, heading)
-                        VALUES (%s, %s::vector, %s, %s, %s, %s, %s, %s)
-                        ON CONFLICT (id) DO UPDATE SET
-                            embedding = EXCLUDED.embedding,
-                            path = EXCLUDED.path,
-                            title = EXCLUDED.title,
-                            content = EXCLUDED.content,
-                            tags = EXCLUDED.tags,
-                            links = EXCLUDED.links,
-                            heading = EXCLUDED.heading
-                    """).format(Identifier(collection)),
-                    (chunk_id(doc.path, doc.chunk_index), vector_str, doc.path, doc.title,
-                     doc.content, doc.tags, doc.links, doc.heading),
-                )
-            conn.commit()
+        if not documents:
+            return
+        rows = [
+            (
+                chunk_id(doc.path, doc.chunk_index),
+                "[" + ",".join(str(v) for v in vector) + "]",
+                doc.path, doc.title, doc.content,
+                doc.tags, doc.links, doc.heading,
+            )
+            for doc, vector in zip(documents, vectors)
+        ]
+        sql = SQL("""
+            INSERT INTO {} (id, embedding, path, title, content, tags, links, heading)
+            VALUES (%s, %s::vector, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET
+                embedding = EXCLUDED.embedding,
+                path = EXCLUDED.path,
+                title = EXCLUDED.title,
+                content = EXCLUDED.content,
+                tags = EXCLUDED.tags,
+                links = EXCLUDED.links,
+                heading = EXCLUDED.heading
+        """).format(Identifier(collection))
+        with self.pool.connection() as conn, conn.cursor() as cur:
+            cur.executemany(sql, rows)
 
     def count_points(self, collection: str) -> int:
         try:
@@ -82,10 +88,8 @@ class PgvectorStore:
                     SQL("SELECT COUNT(*) FROM {}").format(Identifier(collection))
                 ).fetchone()
                 return int(row[0]) if row else 0
-        except Exception as e:
-            if "does not exist" in str(e):
-                return 0
-            raise
+        except pg_errors.UndefinedTable:
+            return 0
 
     def search(
         self,
@@ -108,11 +112,8 @@ class PgvectorStore:
                     LIMIT %s
                 """).format(Identifier(collection))
                 rows = conn.execute(query, (vector_str, vector_str, limit)).fetchall()
-        except Exception as e:
-            error_msg = str(e)
-            if "does not exist" in error_msg:
-                raise CollectionNotFoundError(collection) from e
-            raise
+        except pg_errors.UndefinedTable as e:
+            raise CollectionNotFoundError(collection) from e
 
         results = []
         for row in rows:

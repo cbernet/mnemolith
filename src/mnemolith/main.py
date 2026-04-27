@@ -27,7 +27,8 @@ def cmd_index(args):
         vault_path, embedder, store, get_collection_name(),
         full=full, sparse_embedder=sparse_embedder,
     )
-    print(f"Indexed {len(chunks)} chunks.")
+    if chunks:
+        print(f"Indexed {len(chunks)} chunks.")
 
 
 def cmd_search(args):

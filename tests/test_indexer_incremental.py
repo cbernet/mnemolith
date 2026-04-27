@@ -37,13 +37,15 @@ def test_first_run_indexes_everything(tmp_vault, embedder, store, pg_pool):
     assert set(state.keys()) == {"a.md", "b.md"}
 
 
-def test_no_changes_skips_work(tmp_vault, embedder, store, pg_pool):
+def test_no_changes_skips_work(tmp_vault, embedder, store, pg_pool, capsys):
     index_vault(str(tmp_vault), embedder, store, "c", state_pool=pg_pool)
     store.reset_mock()
+    capsys.readouterr()  # clear first-run output
     chunks = index_vault(str(tmp_vault), embedder, store, "c", state_pool=pg_pool)
     assert chunks == []
     store.upsert_documents.assert_not_called()
     store.delete_by_paths.assert_not_called()
+    assert "up to date" in capsys.readouterr().out
 
 
 def test_modified_file_reembedded(tmp_vault, embedder, store, pg_pool):

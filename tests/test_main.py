@@ -63,6 +63,19 @@ def test_cmd_index_full_flag(mock_index, mock_embedder, mock_store, mock_collect
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")
 @patch("mnemolith.main.get_vector_store")
 @patch("mnemolith.main.build_embedder")
+@patch("mnemolith.main.index_vault", return_value=[])
+def test_cmd_index_noop_does_not_print_misleading_count(
+    mock_index, mock_embedder, mock_store, mock_collection, tmp_path, capsys,
+):
+    """When nothing changes, cmd_index must not print 'Indexed 0 chunks.'"""
+    args = Namespace(vault_path=str(tmp_path), full=False, clean=False)
+    cmd_index(args)
+    assert "Indexed 0 chunks" not in capsys.readouterr().out
+
+
+@patch("mnemolith.main.get_collection_name", return_value="test_collection")
+@patch("mnemolith.main.get_vector_store")
+@patch("mnemolith.main.build_embedder")
 @patch("mnemolith.main.search")
 def test_cmd_search_success(mock_search, mock_embedder, mock_store, mock_collection, capsys):
     mock_search.return_value = [

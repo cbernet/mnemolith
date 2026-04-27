@@ -1,6 +1,7 @@
 import logging
 
 from qdrant_client import QdrantClient
+from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.models import (
     Distance,
     FieldCondition,
@@ -120,7 +121,6 @@ class QdrantStore:
             self.client.upsert(collection_name=collection, points=points[i:i + batch_size])
 
     def count_points(self, collection: str) -> int:
-        from qdrant_client.http.exceptions import UnexpectedResponse
         try:
             return self.client.count(collection_name=collection).count
         except UnexpectedResponse as e:
@@ -143,7 +143,6 @@ class QdrantStore:
         not comparable to cosine similarity values. score_threshold is therefore
         ignored in hybrid mode; a warning is logged if one is passed.
         """
-        from qdrant_client.http.exceptions import UnexpectedResponse
         try:
             if sparse_query is not None:
                 if score_threshold is not None:

@@ -40,10 +40,7 @@ def index_vault(
     }
 
     if full:
-        try:
-            store.delete_collection(collection)
-        except Exception:
-            pass  # collection may not exist
+        store.delete_collection(collection)
         index_state.reset_state(state_pool, collection)
         files_to_embed = set(new_hashes)
         files_to_delete: list[str] = []
@@ -65,7 +62,10 @@ def index_vault(
         deleted = [p for p in existing_hashes if p not in new_hashes]
         files_to_embed = set(added + modified)
         files_to_delete = modified + deleted
-        print(f"+{len(added)} ~{len(modified)} -{len(deleted)} files")
+        if files_to_embed or files_to_delete:
+            print(f"+{len(added)} ~{len(modified)} -{len(deleted)} files")
+        else:
+            print("Index is up to date.")
 
     store.ensure_collection(collection, embedder.dimension, sparse=sparse_embedder is not None)
 

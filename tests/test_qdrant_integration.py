@@ -212,6 +212,11 @@ def test_ensure_collection_reuses_existing_sparse_collection(mock_embedder, qdra
     assert collection_name in fresh_store._named_vector_collections
 
 
+def test_delete_collection_idempotent(qdrant_store):
+    """Deleting a non-existent collection is a no-op, not an error."""
+    qdrant_store.delete_collection(f"never_existed_{uuid.uuid4().hex[:8]}")
+
+
 def test_delete_by_paths(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
     """delete_by_paths removes only chunks whose payload.path is in the given list."""
     index_vault(vault_path, mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
