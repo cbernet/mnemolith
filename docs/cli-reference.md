@@ -54,6 +54,17 @@ uv run mnemolith index ~/Obsidian\ Vault
 - The deprecated `--clean` flag still works as an alias for `--full` but will be removed in a future release.
 - Renaming a file is treated as delete + add — the renamed file's chunks are re-embedded even though content is unchanged.
 
+### Automating indexing with cron
+
+Because incremental runs are cheap when nothing has changed, a periodic cron job is a low-cost way to keep the index in sync with your vault:
+
+```cron
+PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin
+*/30 * * * * cd /path/to/mnemolith && /path/to/uv run mnemolith index >> /tmp/mnemolith-index.log 2>&1
+```
+
+This runs every 30 minutes; tune the cadence to how often you edit notes. If chunking logic changes in a future release, mnemolith auto-detects it via an internal `SCHEMA_VERSION` and re-embeds everything on the next run — no manual `--full` needed.
+
 ## `mnemolith search`
 
 Query the indexed vault with natural language.
