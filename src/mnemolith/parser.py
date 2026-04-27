@@ -1,8 +1,16 @@
 import re
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
+
+_CHUNK_NAMESPACE = uuid.UUID("00000000-0000-0000-0000-0000000000c0")
+
+
+def chunk_id(path: str, chunk_index: int) -> str:
+    """Stable UUID5 derived from (path, chunk_index). Same input -> same id across runs."""
+    return str(uuid.uuid5(_CHUNK_NAMESPACE, f"{path}::{chunk_index}"))
 
 
 @dataclass
@@ -14,6 +22,7 @@ class Document:
     tags: list[str] = field(default_factory=list)
     links: list[str] = field(default_factory=list)
     heading: str | None = None
+    chunk_index: int = 0
 
 
 FRONTMATTER_RE = re.compile(r"^---\n(.+?)\n---\n?", re.DOTALL)
@@ -106,6 +115,8 @@ def chunk_document(doc: Document) -> list[Document]:
     if not chunks:
         chunks.append(doc)
 
+    for i, c in enumerate(chunks):
+        c.chunk_index = i
     return chunks
 
 

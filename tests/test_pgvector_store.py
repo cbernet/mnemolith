@@ -106,6 +106,39 @@ def test_search_sparse_query_not_supported(pgvector_store, collection_name, samp
         pgvector_store.search(collection_name, [1.0, 0.0, 0.0], sparse_query=SparseVector(indices=[0], values=[1.0]))
 
 
+def test_delete_by_paths(pgvector_store, collection_name, sample_docs):
+    pgvector_store.ensure_collection(collection_name, 3)
+    pgvector_store.upsert_documents(
+        collection_name, sample_docs, [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]
+    )
+    pgvector_store.delete_by_paths(collection_name, ["notes/python.md"])
+    results = pgvector_store.search(collection_name, [1.0, 0.0, 0.0], limit=10)
+    assert {r["path"] for r in results} == {"notes/rust.md"}
+
+
+def test_delete_by_paths_empty_list_is_noop(pgvector_store, collection_name, sample_docs):
+    pgvector_store.ensure_collection(collection_name, 3)
+    pgvector_store.upsert_documents(
+        collection_name, sample_docs, [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]
+    )
+    pgvector_store.delete_by_paths(collection_name, [])
+    results = pgvector_store.search(collection_name, [1.0, 0.0, 0.0], limit=10)
+    assert len(results) == 2
+
+
+def test_count_points(pgvector_store, collection_name, sample_docs):
+    pgvector_store.ensure_collection(collection_name, 3)
+    assert pgvector_store.count_points(collection_name) == 0
+    pgvector_store.upsert_documents(
+        collection_name, sample_docs, [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]
+    )
+    assert pgvector_store.count_points(collection_name) == 2
+
+
+def test_count_points_missing_collection(pgvector_store):
+    assert pgvector_store.count_points("nonexistent") == 0
+
+
 def test_upsert_replaces_on_reindex(pgvector_store, collection_name, sample_docs):
     dim = 3
     pgvector_store.ensure_collection(collection_name, dim)

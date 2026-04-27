@@ -1,8 +1,9 @@
+from psycopg import errors as pg_errors
 from psycopg.sql import SQL, Identifier
 from psycopg_pool import ConnectionPool
 
 from mnemolith.embeddings import SparseVector as EmbSparseVector
-from mnemolith.parser import Document
+from mnemolith.parser import Document, chunk_id
 from mnemolith.vector_store import CollectionNotFoundError
 
 
@@ -18,7 +19,7 @@ class PgvectorStore:
             conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
             conn.execute(SQL("""
                 CREATE TABLE IF NOT EXISTS {} (
-                    id SERIAL PRIMARY KEY,
+                    id UUID PRIMARY KEY,
                     embedding vector({}),
                     path TEXT,
                     title TEXT,
@@ -35,6 +36,16 @@ class PgvectorStore:
             conn.execute(SQL("DROP TABLE IF EXISTS {}").format(Identifier(name)))
             conn.commit()
 
+    def delete_by_paths(self, collection: str, paths: list[str]) -> None:
+        if not paths:
+            return
+        with self.pool.connection() as conn:
+            conn.execute(
+                SQL("DELETE FROM {} WHERE path = ANY(%s)").format(Identifier(collection)),
+                (paths,),
+            )
+            conn.commit()
+
     def upsert_documents(
         self,
         collection: str,
@@ -44,20 +55,41 @@ class PgvectorStore:
     ) -> None:
         if sparse_vectors is not None:
             raise NotImplementedError("pgvector backend does not support sparse vectors")
-        with self.pool.connection() as conn:
-            # Clear existing data and insert fresh (reindex semantics)
-            conn.execute(SQL("DELETE FROM {}").format(Identifier(collection)))
-            for i, (doc, vector) in enumerate(zip(documents, vectors)):
-                vector_str = "[" + ",".join(str(v) for v in vector) + "]"
-                conn.execute(
-                    SQL("""
-                        INSERT INTO {} (id, embedding, path, title, content, tags, links, heading)
-                        VALUES (%s, %s::vector, %s, %s, %s, %s, %s, %s)
-                    """).format(Identifier(collection)),
-                    (i, vector_str, doc.path, doc.title, doc.content,
-                     doc.tags, doc.links, doc.heading),
-                )
-            conn.commit()
+        if not documents:
+            return
+        rows = [
+            (
+                chunk_id(doc.path, doc.chunk_index),
+                "[" + ",".join(str(v) for v in vector) + "]",
+                doc.path, doc.title, doc.content,
+                doc.tags, doc.links, doc.heading,
+            )
+            for doc, vector in zip(documents, vectors)
+        ]
+        sql = SQL("""
+            INSERT INTO {} (id, embedding, path, title, content, tags, links, heading)
+            VALUES (%s, %s::vector, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET
+                embedding = EXCLUDED.embedding,
+                path = EXCLUDED.path,
+                title = EXCLUDED.title,
+                content = EXCLUDED.content,
+                tags = EXCLUDED.tags,
+                links = EXCLUDED.links,
+                heading = EXCLUDED.heading
+        """).format(Identifier(collection))
+        with self.pool.connection() as conn, conn.cursor() as cur:
+            cur.executemany(sql, rows)
+
+    def count_points(self, collection: str) -> int:
+        try:
+            with self.pool.connection() as conn:
+                row = conn.execute(
+                    SQL("SELECT COUNT(*) FROM {}").format(Identifier(collection))
+                ).fetchone()
+                return int(row[0]) if row else 0
+        except pg_errors.UndefinedTable:
+            return 0
 
     def search(
         self,
@@ -80,11 +112,8 @@ class PgvectorStore:
                     LIMIT %s
                 """).format(Identifier(collection))
                 rows = conn.execute(query, (vector_str, vector_str, limit)).fetchall()
-        except Exception as e:
-            error_msg = str(e)
-            if "does not exist" in error_msg:
-                raise CollectionNotFoundError(collection) from e
-            raise
+        except pg_errors.UndefinedTable as e:
+            raise CollectionNotFoundError(collection) from e
 
         results = []
         for row in rows:

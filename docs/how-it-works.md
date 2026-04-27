@@ -79,7 +79,9 @@ Vectors are stored in Qdrant using cosine similarity. Each point contains:
 - **Vector** — the embedding
 - **Payload** — `path`, `title`, `content`, `tags`, `links`, `heading`
 
-The collection is created automatically on first index. Points use sequential integer IDs. Re-indexing upserts vectors at those IDs, but does **not** remove points at IDs that no longer exist — stale vectors from deleted notes remain until the collection is manually deleted and rebuilt.
+The collection is created automatically on first index. Each point is keyed by a stable UUID derived from `(path, chunk_index)` so re-indexing the same chunk overwrites it idempotently.
+
+Indexing is **incremental by default**: a `vault_index_state` table in PostgreSQL records a SHA-256 content hash per source file. On each `mnemolith index` run, mnemolith diffs the vault against this state, embeds only the new and modified files, and evicts vectors for deleted files. Run `mnemolith index --full` to drop the collection and rebuild from scratch.
 
 ## Search
 

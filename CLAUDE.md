@@ -53,6 +53,14 @@ Finalizing your modifications:
 - first run ruff and fix issues
 - run the full test suite
 
+## Pre-PR self review
+
+Before making a PR,
+
+- re-read your own diffs vs origin/main
+- conduct a full PR review locally
+- fix all important issues you can find
+
 ## Managing our interactions
 
 - feel free to disagree with me (even strongly), I'm not that sensitive and I don't know everything.

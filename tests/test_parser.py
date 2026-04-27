@@ -2,6 +2,7 @@ from mnemolith.parser import (
     Document,
     build_embedding_text,
     chunk_document,
+    chunk_id,
     extract_inline_tags,
     extract_links,
     parse_frontmatter,
@@ -198,6 +199,28 @@ def test_chunk_document_no_intro():
     assert len(chunks) == 1
     assert chunks[0].heading == "Only Section"
     assert chunks[0].content == "Content here."
+
+
+def test_chunk_document_assigns_chunk_index():
+    doc = Document(
+        path="test.md",
+        title="test",
+        content="Intro.\n\n## A\n\nBody A.\n\n## B\n\nBody B.",
+    )
+    chunks = chunk_document(doc)
+    assert [c.chunk_index for c in chunks] == [0, 1, 2]
+
+
+def test_chunk_id_stable():
+    """Same (path, chunk_index) -> same UUID."""
+    assert chunk_id("notes/foo.md", 0) == chunk_id("notes/foo.md", 0)
+
+
+def test_chunk_id_distinct_for_different_inputs():
+    a = chunk_id("notes/foo.md", 0)
+    b = chunk_id("notes/foo.md", 1)
+    c = chunk_id("notes/bar.md", 0)
+    assert len({a, b, c}) == 3
 
 
 def test_chunk_document_preserves_h3():

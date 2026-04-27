@@ -31,10 +31,46 @@ def test_cmd_index_invalid_path(tmp_path):
 @patch("mnemolith.main.build_embedder")
 @patch("mnemolith.main.index_vault", return_value=["c1", "c2", "c3"])
 def test_cmd_index_success(mock_index, mock_embedder, mock_store, mock_collection, tmp_path, capsys):
-    args = Namespace(vault_path=str(tmp_path), clean=False)
+    args = Namespace(vault_path=str(tmp_path), full=False, clean=False)
     cmd_index(args)
     assert "Indexed 3 chunks" in capsys.readouterr().out
     mock_index.assert_called_once()
+
+
+@patch("mnemolith.main.get_collection_name", return_value="test_collection")
+@patch("mnemolith.main.get_vector_store")
+@patch("mnemolith.main.build_embedder")
+@patch("mnemolith.main.index_vault", return_value=[])
+def test_cmd_index_clean_alias_warns(mock_index, mock_embedder, mock_store, mock_collection, tmp_path, capsys):
+    """Using --clean prints a deprecation warning and forwards full=True."""
+    args = Namespace(vault_path=str(tmp_path), full=False, clean=True)
+    cmd_index(args)
+    out = capsys.readouterr().out
+    assert "deprecated" in out
+    assert mock_index.call_args.kwargs["full"] is True
+
+
+@patch("mnemolith.main.get_collection_name", return_value="test_collection")
+@patch("mnemolith.main.get_vector_store")
+@patch("mnemolith.main.build_embedder")
+@patch("mnemolith.main.index_vault", return_value=[])
+def test_cmd_index_full_flag(mock_index, mock_embedder, mock_store, mock_collection, tmp_path):
+    args = Namespace(vault_path=str(tmp_path), full=True, clean=False)
+    cmd_index(args)
+    assert mock_index.call_args.kwargs["full"] is True
+
+
+@patch("mnemolith.main.get_collection_name", return_value="test_collection")
+@patch("mnemolith.main.get_vector_store")
+@patch("mnemolith.main.build_embedder")
+@patch("mnemolith.main.index_vault", return_value=[])
+def test_cmd_index_noop_does_not_print_misleading_count(
+    mock_index, mock_embedder, mock_store, mock_collection, tmp_path, capsys,
+):
+    """When nothing changes, cmd_index must not print 'Indexed 0 chunks.'"""
+    args = Namespace(vault_path=str(tmp_path), full=False, clean=False)
+    cmd_index(args)
+    assert "Indexed 0 chunks" not in capsys.readouterr().out
 
 
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")

@@ -31,8 +31,8 @@ def collection_name(qdrant_store):
         pass
 
 
-def test_index_and_search(vault_path, mock_embedder, qdrant_store, collection_name):
-    docs = index_vault(vault_path, mock_embedder, qdrant_store, collection_name)
+def test_index_and_search(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
+    docs = index_vault(vault_path, mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
     assert len(docs) >= 5
 
     results = search(
@@ -47,13 +47,13 @@ def test_index_and_search(vault_path, mock_embedder, qdrant_store, collection_na
     assert all("path" in r for r in results)
 
 
-def test_index_empty_vault(tmp_path, mock_embedder, qdrant_store, collection_name):
-    docs = index_vault(str(tmp_path), mock_embedder, qdrant_store, collection_name)
+def test_index_empty_vault(tmp_path, mock_embedder, qdrant_store, collection_name, pg_pool):
+    docs = index_vault(str(tmp_path), mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
     assert docs == []
 
 
-def test_search_returns_ranked_results(vault_path, mock_embedder, qdrant_store, collection_name):
-    index_vault(vault_path, mock_embedder, qdrant_store, collection_name)
+def test_search_returns_ranked_results(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
+    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
 
     results = search(
         "simple note with basic content",
@@ -67,8 +67,8 @@ def test_search_returns_ranked_results(vault_path, mock_embedder, qdrant_store, 
     assert scores == sorted(scores, reverse=True)
 
 
-def test_search_score_threshold(vault_path, mock_embedder, qdrant_store, collection_name):
-    index_vault(vault_path, mock_embedder, qdrant_store, collection_name)
+def test_search_score_threshold(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
+    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
 
     all_results = search(
         "simple note",
@@ -91,12 +91,15 @@ def test_search_score_threshold(vault_path, mock_embedder, qdrant_store, collect
     assert len(filtered) < len(all_results)
 
 
-def test_hybrid_index_and_search(vault_path, mock_embedder, qdrant_store, collection_name):
+def test_hybrid_index_and_search(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
     """Hybrid search with BM25 sparse + dense vectors using RRF fusion."""
     from mnemolith.embeddings import MockSparseEmbedder
     sparse_embedder = MockSparseEmbedder()
 
-    docs = index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+    docs = index_vault(
+        vault_path, mock_embedder, qdrant_store, collection_name,
+        sparse_embedder=sparse_embedder, state_pool=pg_pool,
+    )
     assert len(docs) >= 5
 
     results = search(
@@ -112,12 +115,17 @@ def test_hybrid_index_and_search(vault_path, mock_embedder, qdrant_store, collec
     assert all("path" in r for r in results)
 
 
-def test_hybrid_search_ignores_score_threshold(vault_path, mock_embedder, qdrant_store, collection_name):
+def test_hybrid_search_ignores_score_threshold(
+    vault_path, mock_embedder, qdrant_store, collection_name, pg_pool,
+):
     """RRF scores are ~0.016-0.05; a threshold of 0.3 must not filter all results."""
     from mnemolith.embeddings import MockSparseEmbedder
     sparse_embedder = MockSparseEmbedder()
 
-    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+    index_vault(
+        vault_path, mock_embedder, qdrant_store, collection_name,
+        sparse_embedder=sparse_embedder, state_pool=pg_pool,
+    )
 
     all_results = search(
         "simple note",
@@ -144,12 +152,17 @@ def test_hybrid_search_ignores_score_threshold(vault_path, mock_embedder, qdrant
     assert len(results) == len(all_results)
 
 
-def test_hybrid_search_warns_on_score_threshold(vault_path, mock_embedder, qdrant_store, collection_name, caplog):
+def test_hybrid_search_warns_on_score_threshold(
+    vault_path, mock_embedder, qdrant_store, collection_name, caplog, pg_pool,
+):
     """A warning must be emitted when score_threshold is passed for hybrid search."""
     from mnemolith.embeddings import MockSparseEmbedder
     sparse_embedder = MockSparseEmbedder()
 
-    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+    index_vault(
+        vault_path, mock_embedder, qdrant_store, collection_name,
+        sparse_embedder=sparse_embedder, state_pool=pg_pool,
+    )
 
     with caplog.at_level(logging.WARNING, logger="mnemolith.qdrant_store"):
         search(
@@ -164,14 +177,19 @@ def test_hybrid_search_warns_on_score_threshold(vault_path, mock_embedder, qdran
     assert any("score_threshold" in msg for msg in caplog.messages)
 
 
-def test_dense_search_does_not_call_has_named_vectors(vault_path, mock_embedder, qdrant_store, collection_name):
+def test_dense_search_does_not_call_has_named_vectors(
+    vault_path, mock_embedder, qdrant_store, collection_name, pg_pool,
+):
     """After indexing with sparse, dense-only search must use cache, not API call."""
     from unittest.mock import patch
 
     from mnemolith.embeddings import MockSparseEmbedder
     sparse_embedder = MockSparseEmbedder()
 
-    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+    index_vault(
+        vault_path, mock_embedder, qdrant_store, collection_name,
+        sparse_embedder=sparse_embedder, state_pool=pg_pool,
+    )
 
     with patch.object(qdrant_store, "_has_named_vectors", wraps=qdrant_store._has_named_vectors) as mock_hnv:
         search("simple note", mock_embedder, qdrant_store, collection_name, limit=5)
@@ -194,12 +212,52 @@ def test_ensure_collection_reuses_existing_sparse_collection(mock_embedder, qdra
     assert collection_name in fresh_store._named_vector_collections
 
 
-def test_dense_search_on_named_vector_collection(vault_path, mock_embedder, qdrant_store, collection_name):
+def test_delete_collection_idempotent(qdrant_store):
+    """Deleting a non-existent collection is a no-op, not an error."""
+    qdrant_store.delete_collection(f"never_existed_{uuid.uuid4().hex[:8]}")
+
+
+def test_delete_by_paths(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
+    """delete_by_paths removes only chunks whose payload.path is in the given list."""
+    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
+    all_results = search("note", mock_embedder, qdrant_store, collection_name, limit=50)
+    paths = sorted({r["path"] for r in all_results})
+    assert len(paths) >= 2
+
+    target = paths[0]
+    qdrant_store.delete_by_paths(collection_name, [target])
+
+    after = search("note", mock_embedder, qdrant_store, collection_name, limit=50)
+    remaining = {r["path"] for r in after}
+    assert target not in remaining
+    assert all(p in remaining for p in paths[1:])
+
+
+def test_delete_by_paths_empty_list_is_noop(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
+    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
+    before = search("note", mock_embedder, qdrant_store, collection_name, limit=50)
+    qdrant_store.delete_by_paths(collection_name, [])
+    after = search("note", mock_embedder, qdrant_store, collection_name, limit=50)
+    assert {r["path"] for r in before} == {r["path"] for r in after}
+
+
+def test_count_points(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
+    assert qdrant_store.count_points(collection_name) == 0  # collection doesn't exist
+    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
+    assert qdrant_store.count_points(collection_name) >= 5
+
+
+def test_dense_search_on_named_vector_collection(
+    vault_path, mock_embedder, qdrant_store, collection_name, pg_pool,
+):
     """Dense-only search still works on a collection indexed with named vectors."""
     from mnemolith.embeddings import MockSparseEmbedder
     sparse_embedder = MockSparseEmbedder()
 
-    index_vault(vault_path, mock_embedder, qdrant_store, collection_name, sparse_embedder=sparse_embedder)
+    index_vault(
+        vault_path, mock_embedder, qdrant_store, collection_name,
+        sparse_embedder=sparse_embedder, state_pool=pg_pool,
+    )
 
     # Search without sparse_embedder — should fall back to dense with using="dense"
     results = search(
