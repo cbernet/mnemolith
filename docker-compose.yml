@@ -1,6 +1,7 @@
 services:
   qdrant:
     image: qdrant/qdrant:latest
+    restart: unless-stopped
     ports:
       - "127.0.0.1:6333:6333"
     environment:
@@ -10,6 +11,7 @@ services:
 
   postgres:
     image: pgvector/pgvector:pg17
+    restart: unless-stopped
     ports:
       - "127.0.0.1:${POSTGRES_PORT}:5432"
     environment:
