@@ -9,7 +9,9 @@ import hashlib
 
 from psycopg_pool import ConnectionPool
 
-SCHEMA_VERSION = "1"
+# 2: chunks are capped at MAX_CHUNK_TOKENS, so section boundaries (and chunk indices)
+# changed for oversized sections.
+SCHEMA_VERSION = "2"
 
 
 def file_hash(content: bytes) -> str:

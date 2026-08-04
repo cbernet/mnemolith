@@ -109,6 +109,66 @@ def test_openai_embedder_embed_batch_splits_large_input():
         assert mock_client.embeddings.create.call_count == 3
 
 
+def test_openai_embedder_count_tokens():
+    with patch("openai.OpenAI"):
+        e = OpenAIEmbedder(model="text-embedding-3-small")
+        assert e.count_tokens("hello world") == 2
+        assert e.count_tokens("") == 0
+
+
+def test_openai_embedder_count_tokens_unknown_model():
+    """Unknown model raises rather than silently guessing an encoding."""
+    with patch("openai.OpenAI"):
+        e = OpenAIEmbedder(model="some-future-model")
+        with pytest.raises(KeyError):
+            e.count_tokens("hello")
+
+
+def test_openai_embedder_truncates_oversized_input():
+    """Safety net: an oversized input is truncated, not sent through to fail the run."""
+    with patch("openai.OpenAI") as mock_openai:
+        mock_client = Mock()
+        mock_openai.return_value = mock_client
+        sent = {}
+
+        def capture(input, model, **_):  # noqa: A002
+            sent["input"] = input
+            r = Mock()
+            r.data = [Mock(embedding=[0.0]) for _ in input]
+            return r
+
+        mock_client.embeddings.create.side_effect = capture
+
+        e = OpenAIEmbedder(model="text-embedding-3-small", dimension=1)
+        e.embed_batch(["word " * 20000])
+
+        assert e.count_tokens(sent["input"][0]) <= e.max_input_tokens
+
+
+def test_openai_embedder_embeds_when_tokenizer_unavailable():
+    """The truncation safety net must never itself break a run.
+
+    An unknown model has no tiktoken encoding, so truncation is skipped and the text
+    is sent as-is -- unlike count_tokens, which raises rather than guess.
+    """
+    with patch("openai.OpenAI") as mock_openai:
+        mock_client = Mock()
+        mock_openai.return_value = mock_client
+        mock_response = Mock()
+        mock_response.data = [Mock(embedding=[0.1])]
+        mock_client.embeddings.create.return_value = mock_response
+
+        e = OpenAIEmbedder(model="some-future-model", dimension=1)
+        assert e.embed_batch(["hello"]) == [[0.1]]
+        assert mock_client.embeddings.create.call_args.kwargs["input"] == ["hello"]
+
+
+def test_mock_embedder_count_tokens():
+    e = MockEmbedder()
+    assert e.count_tokens("one two three") == 3
+    assert e.max_input_tokens > 0
+
+
 @pytest.mark.integration
 @pytest.mark.skipif(
     not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"

@@ -76,7 +76,7 @@ def index_vault(
     new_chunk_counts: dict[str, int] = {}
     for doc in documents:
         if doc.path in files_to_embed:
-            doc_chunks = chunk_document(doc)
+            doc_chunks = chunk_document(doc, count=embedder.count_tokens)
             chunks_to_embed.extend(doc_chunks)
             new_chunk_counts[doc.path] = len(doc_chunks)
 

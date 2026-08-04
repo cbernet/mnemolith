@@ -1,19 +1,26 @@
 import random
+import sys
 from dataclasses import dataclass
 from typing import Protocol
+
+import tiktoken
 
 from mnemolith.config import get_embedding_provider
 
 
 class Embedder(Protocol):
     dimension: int
+    max_input_tokens: int
 
     def embed(self, text: str) -> list[float]: ...
     def embed_batch(self, texts: list[str]) -> list[list[float]]: ...
+    def count_tokens(self, text: str) -> int: ...
 
 
 class MockEmbedder:
     """Deterministic fake embedder for testing. Same text -> same vector."""
+
+    max_input_tokens = 8192
 
     def __init__(self, dimension: int = 384):
         self.dimension = dimension
@@ -25,6 +32,9 @@ class MockEmbedder:
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
         return [self.embed(t) for t in texts]
 
+    def count_tokens(self, text: str) -> int:
+        return len(text.split())
+
 
 def build_embedder() -> Embedder:
     provider = get_embedding_provider()
@@ -35,21 +45,58 @@ def build_embedder() -> Embedder:
 
 class OpenAIEmbedder:
 
+    max_input_tokens = 8192
+
     def __init__(self, model: str = "text-embedding-3-small", dimension: int = 1536):
         import openai
 
         self.client = openai.OpenAI()
         self.model = model
         self.dimension = dimension
+        self._encoding = None
+
+    def _get_encoding(self):
+        # Built lazily: encoding_for_model reads (and on a cold cache downloads) the
+        # vocab, so it stays out of __init__ and is paid once.
+        if self._encoding is None:
+            # Raises KeyError on an unknown model rather than guessing an encoding.
+            self._encoding = tiktoken.encoding_for_model(self.model)
+        return self._encoding
+
+    def count_tokens(self, text: str) -> int:
+        return len(self._get_encoding().encode(text))
+
+    def _truncate(self, text: str) -> str:
+        """Last-resort clamp so one oversized input can't fail a whole indexing run.
+
+        Skips truncation when no encoding is available: a safety net that raises would
+        defeat its own purpose. count_tokens still raises, since a wrong count there
+        would silently mis-size every chunk.
+        """
+        try:
+            encoding = self._get_encoding()
+        except KeyError:
+            return text
+        tokens = encoding.encode(text)
+        if len(tokens) <= self.max_input_tokens:
+            return text
+        print(
+            f"Warning: truncating input from {len(tokens)} to "
+            f"{self.max_input_tokens} tokens",
+            file=sys.stderr,
+        )
+        return encoding.decode(tokens[:self.max_input_tokens])
 
     def embed(self, text: str) -> list[float]:
-        response = self.client.embeddings.create(input=text, model=self.model)
+        response = self.client.embeddings.create(
+            input=self._truncate(text), model=self.model
+        )
         return response.data[0].embedding
 
     def embed_batch(self, texts: list[str], batch_size: int = 100) -> list[list[float]]:
         results = []
         for i in range(0, len(texts), batch_size):
-            batch = texts[i:i + batch_size]
+            batch = [self._truncate(t) for t in texts[i:i + batch_size]]
             response = self.client.embeddings.create(input=batch, model=self.model)
             results.extend(item.embedding for item in response.data)
         return results

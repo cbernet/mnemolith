@@ -1,11 +1,25 @@
 import re
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
 
 _CHUNK_NAMESPACE = uuid.UUID("00000000-0000-0000-0000-0000000000c0")
+
+# Well under the 8192-token embedding input limit, and just below the vault's p99
+# chunk size -- so it only splits the outliers that were drowning the signal.
+MAX_CHUNK_TOKENS = 2000
+
+TokenCounter = Callable[[str], int]
+
+# Chars per token measured at 3.55 over this vault, so //3 over-estimates the count.
+_CHARS_PER_TOKEN = 3
+
+
+def _rough_token_count(text: str) -> int:
+    return len(text) // _CHARS_PER_TOKEN
 
 
 def chunk_id(path: str, chunk_index: int) -> str:
@@ -81,36 +95,93 @@ def parse_file(filepath: Path, vault_root: Path) -> Document | None:
     )
 
 
-def chunk_document(doc: Document) -> list[Document]:
+def _pack(pieces: list[str], sep: str, max_tokens: int, count: TokenCounter) -> list[str]:
+    """Merge consecutive pieces into groups of at most max_tokens, rejoined with sep.
+
+    Document order is preserved and nothing is dropped. A single piece larger than
+    max_tokens is returned on its own, still oversized -- the caller splits it further
+    on a finer separator.
+    """
+    sep_cost = count(sep)
+    out: list[str] = []
+    current, current_tokens = "", 0
+    for piece in pieces:
+        piece_tokens = count(piece)
+        extra = piece_tokens + (sep_cost if current else 0)
+        if current and current_tokens + extra > max_tokens:
+            out.append(current)
+            current, current_tokens = piece, piece_tokens
+        else:
+            current = f"{current}{sep}{piece}" if current else piece
+            current_tokens += extra
+    if current:
+        out.append(current)
+    return out
+
+
+def split_text(
+    text: str,
+    max_tokens: int = MAX_CHUNK_TOKENS,
+    count: TokenCounter = _rough_token_count,
+) -> list[str]:
+    """Split text into pieces of at most max_tokens, on the coarsest boundary that works.
+
+    Tries paragraphs, then lines, and only slices mid-line for input with no structure
+    left to exploit. Returns [text] unchanged when it already fits.
+    """
+    if count(text) <= max_tokens:
+        return [text]
+
+    for sep in ("\n\n", "\n"):
+        if sep not in text:
+            continue
+        pieces = _pack(text.split(sep), sep, max_tokens, count)
+        if pieces == [text]:
+            continue
+        # Each piece is strictly shorter than text, so this recursion terminates.
+        result: list[str] = []
+        for piece in pieces:
+            result.extend(split_text(piece, max_tokens, count))
+        return result
+
+    # No structure left to exploit (minified JSON, base64 blob): slice on characters,
+    # using this text's own chars-per-token ratio so the width fits any counter.
+    ratio = max(1, len(text) // max(1, count(text)))
+    width = max(1, max_tokens * ratio)
+    return [text[i:i + width] for i in range(0, len(text), width)]
+
+
+def chunk_document(
+    doc: Document,
+    max_tokens: int = MAX_CHUNK_TOKENS,
+    count: TokenCounter = _rough_token_count,
+) -> list[Document]:
     splits = HEADING2_RE.split(doc.content)
     # splits alternates: [intro, heading1, body1, heading2, body2, ...]
-    intro = splits[0].strip()
     chunks = []
 
+    def add(content: str, heading: str | None) -> None:
+        for piece in split_text(content, max_tokens, count):
+            chunks.append(Document(
+                path=doc.path,
+                title=doc.title,
+                content=piece,
+                frontmatter=doc.frontmatter,
+                tags=doc.tags,
+                links=doc.links,
+                heading=heading,
+            ))
+
+    intro = splits[0].strip()
     if intro:
-        chunks.append(Document(
-            path=doc.path,
-            title=doc.title,
-            content=intro,
-            frontmatter=doc.frontmatter,
-            tags=doc.tags,
-            links=doc.links,
-        ))
+        add(intro, None)
 
     for i in range(1, len(splits), 2):
         heading = splits[i].strip()
         body = splits[i + 1].strip() if i + 1 < len(splits) else ""
         if not body and not heading:
             continue
-        chunks.append(Document(
-            path=doc.path,
-            title=doc.title,
-            content=body,
-            frontmatter=doc.frontmatter,
-            tags=doc.tags,
-            links=doc.links,
-            heading=heading,
-        ))
+        add(body, heading)
 
     if not chunks:
         chunks.append(doc)
