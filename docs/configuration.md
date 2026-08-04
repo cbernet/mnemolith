@@ -20,6 +20,8 @@ Mnemolith is configured through environment variables. You can set them in a `.e
 | `POSTGRES_HOST` | PostgreSQL host | `localhost` |
 | `POSTGRES_PORT` | PostgreSQL port | `5432` |
 | `BACKUP_DIR` | Directory for backups | `~/.mnemolith/backups/` |
+| `SPARSE_SEARCH_ENABLED` | Hybrid dense + BM25 sparse search (**Qdrant only**) | `true` |
+| `TIKTOKEN_CACHE_DIR` | Where the tokenizer vocab is cached | *(a temp dir)* |
 
 The `.env.example` file provides sensible values for local development — copy it to `.env` and fill in your secrets.
 
@@ -84,6 +86,34 @@ If your Qdrant instance requires authentication:
 QDRANT_API_KEY=your-secret-key
 ```
 
+## Sparse search
+
+`SPARSE_SEARCH_ENABLED` adds a BM25 sparse vector alongside the dense embedding, so keyword matches complement semantic ones. It defaults to **on**.
+
+It only works with Qdrant. The pgvector backend raises `NotImplementedError` for sparse vectors, so the two must be paired deliberately:
+
+```bash
+VECTOR_BACKEND=pgvector
+SPARSE_SEARCH_ENABLED=false   # required: pgvector has no sparse support
+```
+
+```bash
+VECTOR_BACKEND=qdrant
+SPARSE_SEARCH_ENABLED=true    # default
+```
+
+Switching this value changes the collection schema, so run `mnemolith index --full` afterwards.
+
+## Tokenizer cache
+
+Mnemolith counts tokens with [tiktoken](https://github.com/openai/tiktoken) to keep every chunk under the embedding model's input limit. The vocabulary file is downloaded once and cached.
+
+By default that cache lives in a temporary directory, which macOS purges periodically — so a scheduled indexing job re-downloads the vocab from time to time. For cron, point it somewhere persistent:
+
+```bash
+TIKTOKEN_CACHE_DIR=~/.cache/tiktoken
+```
+
 ## Collection name
 
 The `.env.example` uses `obsidian`. Change it if you want to index multiple vaults separately:
@@ -129,6 +159,7 @@ POSTGRES_DB=mnemolith
 
 # Vector backend — pick one:
 VECTOR_BACKEND=pgvector           # vectors in PostgreSQL (simple)
+SPARSE_SEARCH_ENABLED=false       # required with pgvector (no sparse support)
 # VECTOR_BACKEND=qdrant           # dedicated vector DB
 # QDRANT_URL=http://localhost:6333
 # QDRANT_API_KEY=change-me-to-a-strong-secret

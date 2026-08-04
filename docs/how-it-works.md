@@ -53,6 +53,20 @@ Each chunk retains the original document's metadata (path, title, tags, links) s
 
 If a document has no `##` headings, it's stored as a single chunk.
 
+### Size cap
+
+Headings alone aren't enough: a long section can exceed the embedding model's 8192-token input limit, which fails the request and aborts the whole indexing run.
+
+So any section over `MAX_CHUNK_TOKENS` (2000) is split further, on the coarsest boundary that works:
+
+1. **Paragraphs** (blank lines) — where almost all splitting happens
+2. **Lines** — when a single paragraph is still too big
+3. **Character slices** — last resort for text with no structure at all, such as a minified JSON blob
+
+Token counts come from the embedding model's own tokenizer (`tiktoken`, resolved from the model name), not a character estimate. Sub-chunks inherit the parent section's `heading`, so retrieval still shows where they came from.
+
+The cap sits well below the API limit because it also improves retrieval: a single 8000-token chunk dilutes its own embedding, burying whatever made it worth finding.
+
 ## Embedding
 
 Before embedding, each chunk is formatted into a text block that includes context:

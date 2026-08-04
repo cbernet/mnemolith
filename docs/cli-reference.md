@@ -60,8 +60,11 @@ Because incremental runs are cheap when nothing has changed, a periodic cron job
 
 ```cron
 PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin
+TIKTOKEN_CACHE_DIR=/Users/yourname/.cache/tiktoken
 */30 * * * * cd /path/to/mnemolith && /path/to/uv run mnemolith index >> /tmp/mnemolith-index.log 2>&1
 ```
+
+`TIKTOKEN_CACHE_DIR` keeps the tokenizer vocabulary out of the system temp directory, which macOS purges — otherwise the job re-downloads it periodically. See [Configuration](configuration.md).
 
 This runs every 30 minutes; tune the cadence to how often you edit notes. If chunking logic changes in a future release, mnemolith auto-detects it via an internal `SCHEMA_VERSION` and re-embeds everything on the next run — no manual `--full` needed.
 
