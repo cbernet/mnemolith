@@ -33,11 +33,26 @@ def test_get_postgres_dsn_explicit(monkeypatch):
 def test_get_postgres_dsn_from_parts(monkeypatch):
     from mnemolith.config import get_postgres_dsn
 
-    monkeypatch.delenv("POSTGRES_DSN", raising=False)
+    # HOST and PORT must be cleared too, otherwise a local .env overrides the defaults
+    # this test is asserting.
+    for var in ("POSTGRES_DSN", "POSTGRES_HOST", "POSTGRES_PORT"):
+        monkeypatch.delenv(var, raising=False)
     monkeypatch.setenv("POSTGRES_USER", "myuser")
     monkeypatch.setenv("POSTGRES_PASSWORD", "mypass")
     monkeypatch.setenv("POSTGRES_DB", "mydb")
     assert get_postgres_dsn() == "postgresql://myuser:mypass@localhost:5432/mydb"
+
+
+def test_get_postgres_dsn_honours_host_and_port(monkeypatch):
+    from mnemolith.config import get_postgres_dsn
+
+    monkeypatch.delenv("POSTGRES_DSN", raising=False)
+    monkeypatch.setenv("POSTGRES_USER", "myuser")
+    monkeypatch.setenv("POSTGRES_PASSWORD", "mypass")
+    monkeypatch.setenv("POSTGRES_DB", "mydb")
+    monkeypatch.setenv("POSTGRES_HOST", "db.internal")
+    monkeypatch.setenv("POSTGRES_PORT", "5435")
+    assert get_postgres_dsn() == "postgresql://myuser:mypass@db.internal:5435/mydb"
 
 
 def test_get_backup_dir_default(monkeypatch, tmp_path):
