@@ -5,6 +5,7 @@ Mnemolith gives Claude access to your personal knowledge base through an MCP ser
 | | Standalone MCP | Claude Code Plugin |
 |---|---|---|
 | Vault search | Yes | Yes |
+| On-demand indexing | Yes | Yes |
 | PostgreSQL tools | Yes | Yes |
 | Note creation/editing | No | Yes |
 | Works in Claude Desktop | Yes | No |
@@ -58,6 +59,18 @@ Once the plugin is installed, you can ask Claude questions in natural language a
 Claude uses semantic similarity to find matches, so you don't need exact keywords — asking about "bread recipes" can surface a note titled "Weekend baking experiments".
 
 Results include a relevance score; low-scoring results (below 0.3 by default) are filtered out.
+
+## Indexing on demand
+
+Search only finds what has been indexed. A note you just wrote isn't searchable until the next index run — by default a cron job every few minutes (see [CLI Reference](cli-reference.md#automating-indexing-with-cron)). When you don't want to wait, ask Claude:
+
+- **"Index my vault"**
+- **"I just added a note — make it searchable"**
+- **"Re-index, then find my notes about X"**
+
+Claude calls the `index_vault` tool, which runs the same incremental indexing as the CLI: only new, modified, and deleted notes are processed, so it usually takes a second or two. It reports what changed (`+1 ~0 -0 files, 3 chunks embedded`) or that the index was already up to date.
+
+The tool never does a full rebuild — that would re-embed your whole vault and cost real money, so it stays a deliberate CLI action (`mnemolith index --full`). If a cron run happens to be indexing at that moment, the tool reports that a run is in progress rather than competing with it.
 
 ## Structured data with PostgreSQL
 
@@ -161,4 +174,4 @@ claude mcp list
 
 **Server not appearing in Claude** — check that the path in your MCP config is absolute, make sure `uv` is in your PATH, and restart Claude after config changes.
 
-**Search returns no results** — verify Qdrant is running (`curl http://localhost:6333`), re-index after adding new notes, and try different query phrasing.
+**Search returns no results** — verify Qdrant is running (`curl http://localhost:6333`), and try different query phrasing. If you just wrote the note, ask Claude to index the vault first (see [Indexing on demand](#indexing-on-demand)).

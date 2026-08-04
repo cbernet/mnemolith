@@ -6,6 +6,8 @@ from mcp.server.fastmcp import FastMCP
 from mnemolith import pg_store
 from mnemolith.config import get_collection_name, get_vault_path
 from mnemolith.embeddings import build_embedder, build_sparse_embedder
+from mnemolith.indexer import IndexLockedError, LegacyCollectionError
+from mnemolith.indexer import index_vault as indexer_index_vault
 from mnemolith.indexer import search as indexer_search
 from mnemolith.pg_store import close_pool, get_pool
 from mnemolith.vector_store import get_vector_store
@@ -91,6 +93,28 @@ def search(query: str, limit: int = 5, score_threshold: float = 0.3) -> str:
         limit=limit, score_threshold=score_threshold, sparse_embedder=sparse_embedder,
     )
     return format_results(results)
+
+
+@mcp.tool()
+def index_vault() -> str:
+    """Re-index the user's Obsidian vault so recent note changes become searchable.
+
+    Incremental: only new, modified, and deleted notes are processed, so this is
+    cheap to call. Use it right after creating or editing notes, or when a search
+    should have found something the user says they just wrote.
+    """
+    try:
+        result = indexer_index_vault(
+            get_vault_path(),
+            _get_embedder(),
+            get_vector_store(),
+            get_collection_name(),
+            full=False,
+            sparse_embedder=_get_sparse_embedder(),
+        )
+    except (IndexLockedError, LegacyCollectionError) as e:
+        return str(e)
+    return result.summary()
 
 
 @mcp.tool()

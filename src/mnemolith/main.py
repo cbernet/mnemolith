@@ -1,11 +1,12 @@
 import argparse
+import logging
 import sys
 from pathlib import Path
 
 from mnemolith.backup import create_backup, restore_backup
 from mnemolith.config import get_collection_name, get_vault_path
 from mnemolith.embeddings import build_embedder, build_sparse_embedder
-from mnemolith.indexer import index_vault, search
+from mnemolith.indexer import IndexLockedError, index_vault, search
 from mnemolith.vector_store import CollectionNotFoundError, get_vector_store
 
 MAX_LIMIT = 50
@@ -23,12 +24,17 @@ def cmd_index(args):
     embedder = build_embedder()
     sparse_embedder = build_sparse_embedder()
     store = get_vector_store()
-    chunks = index_vault(
-        vault_path, embedder, store, get_collection_name(),
-        full=full, sparse_embedder=sparse_embedder,
-    )
-    if chunks:
-        print(f"Indexed {len(chunks)} chunks.")
+    try:
+        result = index_vault(
+            vault_path, embedder, store, get_collection_name(),
+            full=full, sparse_embedder=sparse_embedder,
+        )
+    except IndexLockedError as e:
+        print(f"{e} Skipped.")
+        return
+    # Silent when nothing changed, so a frequent cron job leaves an empty log.
+    if result.changed:
+        print(result.summary())
 
 
 def cmd_search(args):
@@ -70,6 +76,10 @@ def cmd_restore(args):
 
 
 def main():
+    # Progress goes to stderr via logging; stdout stays reserved for command output.
+    # Only our own loggers are verbose — httpx and qdrant-client at INFO would flood a cron log.
+    logging.basicConfig(level=logging.WARNING, format="%(message)s")
+    logging.getLogger("mnemolith").setLevel(logging.INFO)
     parser = argparse.ArgumentParser(prog="mnemolith")
     sub = parser.add_subparsers(dest="command")
 

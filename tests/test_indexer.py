@@ -16,10 +16,10 @@ def store():
 @pytest.mark.pg_integration
 def test_index_vault_calls_upsert(vault_path, mock_embedder, store, pg_pool):
     """index_vault calls store.upsert_documents with all chunks on first run."""
-    chunks = index_vault(vault_path, mock_embedder, store, "test", state_pool=pg_pool)
+    result = index_vault(vault_path, mock_embedder, store, "test", state_pool=pg_pool)
     store.upsert_documents.assert_called_once()
     call_args = store.upsert_documents.call_args
-    assert len(call_args[0][1]) == len(chunks)
+    assert len(call_args[0][1]) == len(result.chunks)
 
 
 @pytest.mark.pg_integration
@@ -35,13 +35,13 @@ def test_index_vault_clean_deletes_collection(vault_path, mock_embedder, store, 
 def test_index_vault_with_sparse_embedder(vault_path, mock_embedder, store, pg_pool):
     """index_vault passes sparse_vectors to upsert_documents when sparse_embedder provided."""
     sparse_embedder = MockSparseEmbedder()
-    chunks = index_vault(
+    result = index_vault(
         vault_path, mock_embedder, store, "test",
         sparse_embedder=sparse_embedder, state_pool=pg_pool,
     )
     call_kwargs = store.upsert_documents.call_args[1]
     assert "sparse_vectors" in call_kwargs
-    assert len(call_kwargs["sparse_vectors"]) == len(chunks)
+    assert len(call_kwargs["sparse_vectors"]) == len(result.chunks)
     store.ensure_collection.assert_called_once_with("test", mock_embedder.dimension, sparse=True)
 
 

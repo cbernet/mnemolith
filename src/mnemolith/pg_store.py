@@ -1,5 +1,8 @@
 import atexit
+import hashlib
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 
 from psycopg_pool import ConnectionPool
 
@@ -32,6 +35,29 @@ def close_pool() -> None:
 
 def _reset_connection(conn) -> None:
     conn.read_only = False
+
+
+def _lock_id(key: str) -> int:
+    """Map an arbitrary key to the signed 64-bit int pg_advisory_lock expects."""
+    return int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], "big", signed=True)
+
+
+@contextmanager
+def advisory_lock(pool: ConnectionPool, key: str) -> Iterator[bool]:
+    """Try to take a cluster-wide lock named `key`; yield whether it was acquired.
+
+    Session-scoped (not transaction-scoped), so it survives the commits a long
+    operation makes. Another connection asking for the same key gets False —
+    that's how concurrent index runs are kept from clobbering each other.
+    """
+    lock_id = _lock_id(key)
+    with pool.connection() as conn:
+        acquired = conn.execute("SELECT pg_try_advisory_lock(%s)", (lock_id,)).fetchone()[0]
+        try:
+            yield acquired
+        finally:
+            if acquired:
+                conn.execute("SELECT pg_advisory_unlock(%s)", (lock_id,))
 
 
 def list_tables(pool: ConnectionPool) -> list[str]:

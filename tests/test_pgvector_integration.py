@@ -21,8 +21,8 @@ def collection_name():
 
 
 def test_index_and_search(vault_path, mock_embedder, pgvector_store, collection_name, pg_pool):
-    docs = index_vault(vault_path, mock_embedder, pgvector_store, collection_name, state_pool=pg_pool)
-    assert len(docs) >= 5
+    result = index_vault(vault_path, mock_embedder, pgvector_store, collection_name, state_pool=pg_pool)
+    assert len(result.chunks) >= 5
 
     results = search(
         "crêpes recette française",
@@ -37,8 +37,8 @@ def test_index_and_search(vault_path, mock_embedder, pgvector_store, collection_
 
 
 def test_index_empty_vault(tmp_path, mock_embedder, pgvector_store, collection_name, pg_pool):
-    docs = index_vault(str(tmp_path), mock_embedder, pgvector_store, collection_name, state_pool=pg_pool)
-    assert docs == []
+    result = index_vault(str(tmp_path), mock_embedder, pgvector_store, collection_name, state_pool=pg_pool)
+    assert result.chunks == []
 
 
 def test_search_returns_ranked_results(vault_path, mock_embedder, pgvector_store, collection_name, pg_pool):

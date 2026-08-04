@@ -3,8 +3,10 @@ from unittest.mock import patch
 import pytest
 
 import mnemolith.mcp_server as _srv
+from mnemolith.indexer import IndexLockedError, IndexResult, LegacyCollectionError
 from mnemolith.mcp_server import (
     format_results,
+    index_vault,
     pg_create_table,
     pg_describe_table,
     pg_list_tables,
@@ -80,6 +82,52 @@ def test_search_calls_indexer(mock_embedder, mock_collection, mock_store, mock_s
 def test_vault_path(mock_get_vault):
     result = vault_path()
     assert "/home/user/obsidian" in result
+
+
+# --- index_vault tool ---
+
+
+def _patch_index(**kwargs):
+    """Patch everything the index_vault tool touches; kwargs go to the indexer patch.
+
+    The indexer patch is applied first so it is the innermost one, i.e. its mock is
+    the test's first argument.
+    """
+    def decorate(fn):
+        for p in (
+            patch("mnemolith.mcp_server.indexer_index_vault", **kwargs),
+            patch("mnemolith.mcp_server.get_vault_path", return_value="/vault"),
+            patch("mnemolith.mcp_server.get_collection_name", return_value="c"),
+            patch("mnemolith.mcp_server.get_vector_store"),
+            patch("mnemolith.mcp_server.build_sparse_embedder"),
+            patch("mnemolith.mcp_server.build_embedder"),
+        ):
+            fn = p(fn)
+        return fn
+    return decorate
+
+
+@_patch_index(return_value=IndexResult(["a.md"], ["b.md"], [], ["c1", "c2"]))
+def test_index_vault_returns_summary(mock_index, *_mocks):
+    result = index_vault()
+    assert "+1 ~1 -0 files, 2 chunks embedded" in result
+    assert mock_index.call_args.kwargs["full"] is False
+
+
+@_patch_index(return_value=IndexResult([], [], [], []))
+def test_index_vault_up_to_date(mock_index, *_mocks):
+    assert "up to date" in index_vault()
+
+
+@_patch_index(side_effect=IndexLockedError("Another index run is in progress."))
+def test_index_vault_locked_returns_message(mock_index, *_mocks):
+    """A concurrent run must come back as text, not a tool-call exception."""
+    assert "in progress" in index_vault()
+
+
+@_patch_index(side_effect=LegacyCollectionError("Run `mnemolith index --full` once to migrate."))
+def test_index_vault_legacy_returns_message(mock_index, *_mocks):
+    assert "--full" in index_vault()
 
 
 # --- PostgreSQL MCP tools ---

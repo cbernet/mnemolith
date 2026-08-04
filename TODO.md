@@ -14,6 +14,8 @@
 - [x] Only embed and upsert changed files, delete vectors for removed files
 - [x] `mnemolith index` incremental by default, `--full` flag for full rebuild
 - [x] Vectors for deleted notes are evicted via `delete_by_paths`
+- [x] `index_vault` MCP tool so Claude can re-index on demand
+- [x] Advisory lock so cron and on-demand runs can't clobber `vault_index_state`
 - [ ] Rename optimization: detect renames by hash and update payloads in place (skip re-embed)
 
 ## Maintenance

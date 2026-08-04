@@ -5,8 +5,13 @@ from unittest.mock import patch
 
 import pytest
 
+from mnemolith.indexer import IndexLockedError, IndexResult
 from mnemolith.main import cmd_backup, cmd_index, cmd_restore, cmd_search
 from mnemolith.vector_store import CollectionNotFoundError
+
+
+def _result(added=(), modified=(), deleted=(), chunks=()):
+    return IndexResult(list(added), list(modified), list(deleted), list(chunks))
 
 
 def test_main_help():
@@ -29,18 +34,19 @@ def test_cmd_index_invalid_path(tmp_path):
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")
 @patch("mnemolith.main.get_vector_store")
 @patch("mnemolith.main.build_embedder")
-@patch("mnemolith.main.index_vault", return_value=["c1", "c2", "c3"])
+@patch("mnemolith.main.index_vault")
 def test_cmd_index_success(mock_index, mock_embedder, mock_store, mock_collection, tmp_path, capsys):
+    mock_index.return_value = _result(added=["a.md"], chunks=["c1", "c2", "c3"])
     args = Namespace(vault_path=str(tmp_path), full=False, clean=False)
     cmd_index(args)
-    assert "Indexed 3 chunks" in capsys.readouterr().out
+    assert "+1 ~0 -0 files, 3 chunks embedded" in capsys.readouterr().out
     mock_index.assert_called_once()
 
 
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")
 @patch("mnemolith.main.get_vector_store")
 @patch("mnemolith.main.build_embedder")
-@patch("mnemolith.main.index_vault", return_value=[])
+@patch("mnemolith.main.index_vault", return_value=_result())
 def test_cmd_index_clean_alias_warns(mock_index, mock_embedder, mock_store, mock_collection, tmp_path, capsys):
     """Using --clean prints a deprecation warning and forwards full=True."""
     args = Namespace(vault_path=str(tmp_path), full=False, clean=True)
@@ -53,7 +59,7 @@ def test_cmd_index_clean_alias_warns(mock_index, mock_embedder, mock_store, mock
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")
 @patch("mnemolith.main.get_vector_store")
 @patch("mnemolith.main.build_embedder")
-@patch("mnemolith.main.index_vault", return_value=[])
+@patch("mnemolith.main.index_vault", return_value=_result())
 def test_cmd_index_full_flag(mock_index, mock_embedder, mock_store, mock_collection, tmp_path):
     args = Namespace(vault_path=str(tmp_path), full=True, clean=False)
     cmd_index(args)
@@ -63,14 +69,27 @@ def test_cmd_index_full_flag(mock_index, mock_embedder, mock_store, mock_collect
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")
 @patch("mnemolith.main.get_vector_store")
 @patch("mnemolith.main.build_embedder")
-@patch("mnemolith.main.index_vault", return_value=[])
-def test_cmd_index_noop_does_not_print_misleading_count(
+@patch("mnemolith.main.index_vault", return_value=_result())
+def test_cmd_index_noop_is_silent(
     mock_index, mock_embedder, mock_store, mock_collection, tmp_path, capsys,
 ):
-    """When nothing changes, cmd_index must not print 'Indexed 0 chunks.'"""
+    """Nothing changed -> no output at all, so a frequent cron job keeps its log clean."""
     args = Namespace(vault_path=str(tmp_path), full=False, clean=False)
     cmd_index(args)
-    assert "Indexed 0 chunks" not in capsys.readouterr().out
+    assert capsys.readouterr().out == ""
+
+
+@patch("mnemolith.main.get_collection_name", return_value="test_collection")
+@patch("mnemolith.main.get_vector_store")
+@patch("mnemolith.main.build_embedder")
+@patch("mnemolith.main.index_vault", side_effect=IndexLockedError("Another index run is in progress."))
+def test_cmd_index_locked_skips_without_error(
+    mock_index, mock_embedder, mock_store, mock_collection, tmp_path, capsys,
+):
+    """An overlapping run is skipped, not an error — cron must not see a failure."""
+    args = Namespace(vault_path=str(tmp_path), full=False, clean=False)
+    cmd_index(args)  # must not raise SystemExit
+    assert "in progress" in capsys.readouterr().out
 
 
 @patch("mnemolith.main.get_collection_name", return_value="test_collection")

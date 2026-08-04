@@ -23,7 +23,7 @@ You and Claude share the same knowledge base. You write notes, Claude reads them
 - **Semantic search** — index your markdown notes into a vector database and find them by meaning, not just keywords. Choose between [pgvector](https://github.com/pgvector/pgvector) (simpler, one database for everything) and [Qdrant](https://qdrant.tech) (dedicated vector DB).
 - **Structured data** — store todo lists, habit trackers, portfolios, and anything tabular in PostgreSQL. Just tell Claude what you want and it will create the necessary tables.
 - **Save conversations as notes** — ask Claude to save any discussion to your vault. Context that matters survives the session.
-- **MCP integration** — Claude (Desktop or Code) searches both backends in a single conversation, bridging prose and data automatically.
+- **MCP integration** — Claude (Desktop or Code) searches both backends in a single conversation, bridging prose and data automatically. Claude can also re-index the vault on request, so a note you just wrote is searchable immediately.
 - **You own everything** — notes stay as plain markdown files, data lives in a local Postgres you can inspect with CloudBeaver, and [backups are a single CLI command](docs/backup-and-restore.md).
 
 ```text
@@ -95,7 +95,7 @@ src/mnemolith/
     qdrant_store.py   # Qdrant backend
     pgvector_store.py # pgvector backend (vectors in PostgreSQL)
     pg_store.py       # PostgreSQL structured data store
-    mcp_server.py     # MCP server exposing search + SQL tools to Claude
+    mcp_server.py     # MCP server exposing search, indexing + SQL tools to Claude
 tests/
     fixtures/vault/  # Sample markdown notes for testing
 .claude-plugin/
