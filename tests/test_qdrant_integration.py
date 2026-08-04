@@ -32,8 +32,8 @@ def collection_name(qdrant_store):
 
 
 def test_index_and_search(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
-    docs = index_vault(vault_path, mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
-    assert len(docs) >= 5
+    result = index_vault(vault_path, mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
+    assert len(result.chunks) >= 5
 
     results = search(
         "crêpes recette française",
@@ -48,8 +48,8 @@ def test_index_and_search(vault_path, mock_embedder, qdrant_store, collection_na
 
 
 def test_index_empty_vault(tmp_path, mock_embedder, qdrant_store, collection_name, pg_pool):
-    docs = index_vault(str(tmp_path), mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
-    assert docs == []
+    result = index_vault(str(tmp_path), mock_embedder, qdrant_store, collection_name, state_pool=pg_pool)
+    assert result.chunks == []
 
 
 def test_search_returns_ranked_results(vault_path, mock_embedder, qdrant_store, collection_name, pg_pool):
@@ -96,11 +96,11 @@ def test_hybrid_index_and_search(vault_path, mock_embedder, qdrant_store, collec
     from mnemolith.embeddings import MockSparseEmbedder
     sparse_embedder = MockSparseEmbedder()
 
-    docs = index_vault(
+    result = index_vault(
         vault_path, mock_embedder, qdrant_store, collection_name,
         sparse_embedder=sparse_embedder, state_pool=pg_pool,
     )
-    assert len(docs) >= 5
+    assert len(result.chunks) >= 5
 
     results = search(
         "simple note",

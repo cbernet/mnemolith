@@ -1,4 +1,6 @@
 import logging
+import warnings
+from urllib.parse import urlparse
 
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
@@ -23,6 +25,22 @@ from mnemolith.vector_store import CollectionNotFoundError
 
 logger = logging.getLogger(__name__)
 
+_LOOPBACK_HOSTS = ("localhost", "127.0.0.1", "::1")
+
+
+def _build_client(url: str, api_key: str | None) -> QdrantClient:
+    """Build the client, muting the insecure-connection warning on a loopback URL.
+
+    qdrant-client warns when an API key travels over plain HTTP. docker-compose binds
+    Qdrant to 127.0.0.1, so on loopback that warning is noise repeated on every
+    scheduled index run. A remote host over HTTP still gets warned.
+    """
+    if api_key and urlparse(url).hostname in _LOOPBACK_HOSTS:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="Api key is used with an insecure connection")
+            return QdrantClient(url=url, api_key=api_key)
+    return QdrantClient(url=url, api_key=api_key)
+
 
 class QdrantStore:
     def __init__(self, url: str | None = None, api_key: str | None = None):
@@ -32,7 +50,7 @@ class QdrantStore:
         if api_key is None:
             from mnemolith.config import get_qdrant_api_key
             api_key = get_qdrant_api_key()
-        self.client = QdrantClient(url=url, api_key=api_key)
+        self.client = _build_client(url, api_key)
         self._named_vector_collections: set[str] = set()
 
     def ensure_collection(self, name: str, dimension: int, sparse: bool = False) -> None:

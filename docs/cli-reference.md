@@ -27,6 +27,10 @@ If `vault_path` is provided, it takes precedence over the environment variable.
 4. Embeds and upserts only the chunks of added/modified files
 5. Updates `vault_index_state` to reflect the new vault snapshot
 
+**Output:** when files changed, a one-line summary (`+1 ~1 -0 files, 7 chunks embedded`). When nothing changed, **nothing is printed** — so a frequent cron job leaves an empty log unless something actually happened.
+
+**Concurrency:** a run takes a PostgreSQL advisory lock on the collection. If another run (cron, or Claude calling the `index_vault` MCP tool) already holds it, the second run prints `... in progress. Skipped.` and exits 0 without touching the index. This keeps overlapping runs from clobbering `vault_index_state`.
+
 **What `--full` does:**
 
 Drops the collection, resets the state table, and rebuilds everything from scratch. Use this when:
@@ -56,17 +60,19 @@ uv run mnemolith index ~/Obsidian\ Vault
 
 ### Automating indexing with cron
 
-Because incremental runs are cheap when nothing has changed, a periodic cron job is a low-cost way to keep the index in sync with your vault:
+A no-op incremental run costs about a second of CPU, one `SELECT`, and zero embedding API calls — so it's cheap to run often:
 
 ```cron
 PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin
 TIKTOKEN_CACHE_DIR=/Users/yourname/.cache/tiktoken
-*/30 * * * * cd /path/to/mnemolith && /path/to/uv run mnemolith index >> /tmp/mnemolith-index.log 2>&1
+*/5 * * * * cd /path/to/mnemolith && /path/to/uv run mnemolith index >> /tmp/mnemolith-index.log 2>&1
 ```
 
 `TIKTOKEN_CACHE_DIR` keeps the tokenizer vocabulary out of the system temp directory, which macOS purges — otherwise the job re-downloads it periodically. See [Configuration](configuration.md).
 
-This runs every 30 minutes; tune the cadence to how often you edit notes. If chunking logic changes in a future release, mnemolith auto-detects it via an internal `SCHEMA_VERSION` and re-embeds everything on the next run — no manual `--full` needed.
+This runs every 5 minutes, so a note is searchable within a few minutes of saving it. Every-minute (`* * * * *`) is also viable at typical vault sizes. For anything more immediate, ask Claude to run the `index_vault` MCP tool — see [Claude Integration](claude-plugin.md#indexing-on-demand). The advisory lock means the cron job and the MCP tool can't collide.
+
+If chunking logic changes in a future release, mnemolith auto-detects it via an internal `SCHEMA_VERSION` and re-embeds everything on the next run — no manual `--full` needed.
 
 ## `mnemolith search`
 

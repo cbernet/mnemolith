@@ -1,6 +1,8 @@
 import pytest
+from psycopg_pool import ConnectionPool
 
 from mnemolith.pg_store import (
+    advisory_lock,
     describe_table,
     execute_ddl,
     execute_mutate,
@@ -9,6 +11,14 @@ from mnemolith.pg_store import (
 )
 
 pytestmark = pytest.mark.pg_integration
+
+
+@pytest.fixture
+def other_pool(pg_pool):
+    """A second pool to the same database — a distinct session, so it sees pg_pool's locks."""
+    pool = ConnectionPool(pg_pool.conninfo, open=True)
+    yield pool
+    pool.close()
 
 
 def test_create_and_list_table(pg_pool):
@@ -49,3 +59,25 @@ def test_insert_query_mutate(pg_pool):
 
     rows = execute_query(pg_pool, "SELECT * FROM test_items")
     assert len(rows) == 1
+
+
+def test_advisory_lock_excludes_other_session_and_releases(pg_pool, other_pool):
+    with advisory_lock(pg_pool, "index:c") as acquired:
+        assert acquired
+        with advisory_lock(other_pool, "index:c") as second:
+            assert second is False
+        with advisory_lock(other_pool, "index:other") as unrelated:
+            assert unrelated  # a different key is a different lock
+
+    with advisory_lock(other_pool, "index:c") as after_release:
+        assert after_release
+
+
+def test_advisory_lock_releases_on_exception(pg_pool, other_pool):
+    with pytest.raises(RuntimeError):  # noqa: SIM117
+        with advisory_lock(pg_pool, "index:c") as acquired:
+            assert acquired
+            raise RuntimeError("boom")
+
+    with advisory_lock(other_pool, "index:c") as acquired:
+        assert acquired

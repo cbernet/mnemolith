@@ -97,6 +97,8 @@ The collection is created automatically on first index. Each point is keyed by a
 
 Indexing is **incremental by default**: a `vault_index_state` table in PostgreSQL records a SHA-256 content hash per source file. On each `mnemolith index` run, mnemolith diffs the vault against this state, embeds only the new and modified files, and evicts vectors for deleted files. Run `mnemolith index --full` to drop the collection and rebuild from scratch.
 
+Because `vault_index_state` is rewritten wholesale at the end of a run, two overlapping runs could leave it out of step with the vector store. Each run therefore takes a PostgreSQL **advisory lock** keyed on the collection name; a run that can't get the lock does nothing and exits cleanly. That makes it safe to run indexing on a short cron interval *and* let Claude trigger it on demand through the `index_vault` MCP tool.
+
 ## Search
 
 When you search (via CLI or MCP):
