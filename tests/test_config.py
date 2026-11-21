@@ -72,6 +72,15 @@ def test_get_backup_dir_custom(monkeypatch, tmp_path):
     assert get_backup_dir() == tmp_path / "my_backups"
 
 
+def test_get_backup_keep(monkeypatch):
+    from mnemolith.config import get_backup_keep
+
+    monkeypatch.delenv("BACKUP_KEEP", raising=False)
+    assert get_backup_keep() == 14
+    monkeypatch.setenv("BACKUP_KEEP", "30")
+    assert get_backup_keep() == 30
+
+
 def test_get_postgres_conn_params_from_env_vars(monkeypatch):
     from mnemolith.config import get_postgres_conn_params
 

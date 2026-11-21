@@ -1,4 +1,7 @@
+import logging
 import os
+import re
+import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -7,14 +10,18 @@ import httpx
 
 from mnemolith.config import (
     get_backup_dir,
+    get_backup_keep,
     get_collection_name,
     get_postgres_conn_params,
     get_qdrant_api_key,
     get_qdrant_url,
 )
 
+logger = logging.getLogger(__name__)
+
 PG_DUMP_FILE = "pg_dump.sql"
 QDRANT_SNAPSHOT_FILE = "qdrant_snapshot.snapshot"
+BACKUP_NAME_RE = re.compile(r"\d{8}_\d{6}")
 
 # Docker compose service name for PostgreSQL
 PG_SERVICE = "postgres"
@@ -79,11 +86,15 @@ def backup_qdrant(backup_path: Path) -> Path:
 
     url = f"{get_qdrant_url()}/collections/{collection}/snapshots/{snapshot.name}"
     snapshot_file = backup_path / QDRANT_SNAPSHOT_FILE
-    with httpx.Client() as http, http.stream("GET", url, headers=_qdrant_headers()) as response:
-        response.raise_for_status()
-        with open(snapshot_file, "wb") as f:
-            for chunk in response.iter_bytes():
-                f.write(chunk)
+    try:
+        with httpx.Client() as http, http.stream("GET", url, headers=_qdrant_headers()) as response:
+            response.raise_for_status()
+            with open(snapshot_file, "wb") as f:
+                for chunk in response.iter_bytes():
+                    f.write(chunk)
+    finally:
+        # Snapshots live in the container's writable layer and would pile up forever
+        store.client.delete_snapshot(collection, snapshot.name)
     return snapshot_file
 
 
@@ -130,9 +141,27 @@ def create_backup(backup_dir: Path | None = None) -> Path:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_path = backup_dir / timestamp
     backup_path.mkdir(parents=True, exist_ok=True)
-    backup_postgres(backup_path)
-    backup_vector_store(backup_path)
+    try:
+        backup_postgres(backup_path)
+        backup_vector_store(backup_path)
+    except Exception:
+        # A partial backup would count against BACKUP_KEEP and push out a good one
+        shutil.rmtree(backup_path, ignore_errors=True)
+        raise
+    prune_backups(backup_dir, get_backup_keep())
     return backup_path
+
+
+def prune_backups(backup_dir: Path, keep: int) -> list[Path]:
+    if keep <= 0:
+        return []
+    backups = sorted(p for p in backup_dir.iterdir() if p.is_dir() and BACKUP_NAME_RE.fullmatch(p.name))
+    removed = backups[:-keep]
+    for path in removed:
+        shutil.rmtree(path)
+    if removed:
+        logger.info("Pruned %d old backup(s), keeping the %d most recent", len(removed), keep)
+    return removed
 
 
 def restore_backup(backup_path: Path) -> None:

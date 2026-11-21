@@ -147,7 +147,10 @@ uv run mnemolith backup [--dir DIR]
 
 1. Creates a timestamped subfolder (e.g. `20260315_143022/`) inside the backup directory
 2. Runs `pg_dump` inside the Docker PostgreSQL container, saves the output as `pg_dump.sql`
-3. Creates a Qdrant collection snapshot via the API, downloads it as `qdrant_snapshot.snapshot`
+3. Creates a Qdrant collection snapshot via the API, downloads it as `qdrant_snapshot.snapshot`, then deletes it from the Qdrant server
+4. Removes older backups beyond the `BACKUP_KEEP` most recent (default 14, `0` keeps all)
+
+If a step fails, the partial backup folder is removed and no older backups are pruned.
 
 **Example:**
 

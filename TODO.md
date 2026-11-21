@@ -6,6 +6,7 @@
 - [x] `mnemolith restore <backup_dir>` CLI command
 - [x] Configurable backup directory (`BACKUP_DIR`, default `~/.mnemolith/backups/`)
 - [x] Timestamped backup folders with `pg_dump.sql` + `qdrant_snapshot.snapshot`
+- [x] Retention (`BACKUP_KEEP`, default 14) and server-side Qdrant snapshot cleanup
 
 ## Incremental Indexing
 
