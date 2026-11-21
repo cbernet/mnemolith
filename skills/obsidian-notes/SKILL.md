@@ -25,11 +25,16 @@ All content files are markdown (`.md`). When creating or editing notes:
 
 ## Note Structure
 
-Start the note with the title as an H1 heading, then write the front matter block below it:
+Do not write the note title as an H1 heading: Obsidian already displays the filename as the title.
+
+Instead, put the title in the filename. Choose one that reads well and works on all filesystems:
+
+- no special characters other than spaces
+- capitalize the words of the title
+
+Start the note with the front matter block:
 
 ```
-# Note Title
-
 date: 2026-01-24
 type: ressources thérapeutiques
 tags: #tag-one #tag-two
