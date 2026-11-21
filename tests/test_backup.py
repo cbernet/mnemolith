@@ -160,6 +160,38 @@ class TestBackupQdrant:
                 pytest.raises(httpx.HTTPStatusError):
             backup_qdrant(tmp_path)
 
+    @pytest.mark.parametrize("download_fails", [False, True])
+    def test_deletes_server_snapshot(self, tmp_path, monkeypatch, download_fails):
+        # Snapshots left on the server pile up inside the Qdrant container
+        from mnemolith.backup import backup_qdrant
+
+        monkeypatch.setenv("QDRANT_URL", "http://localhost:6333")
+        monkeypatch.setenv("COLLECTION_NAME", "test_col")
+        monkeypatch.delenv("QDRANT_API_KEY", raising=False)
+
+        mock_store = MagicMock()
+        snapshot_desc = MagicMock()
+        snapshot_desc.name = "snap.snapshot"
+        mock_store.client.create_snapshot.return_value = snapshot_desc
+
+        mock_response = MagicMock()
+        mock_response.iter_bytes.return_value = [b"data"]
+        if download_fails:
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "Server Error", request=MagicMock(), response=mock_response
+            )
+        http_mock = self._make_http_mock(mock_response)
+
+        with patch("mnemolith.qdrant_store.QdrantStore", return_value=mock_store), \
+                patch("httpx.Client", return_value=http_mock):
+            if download_fails:
+                with pytest.raises(httpx.HTTPStatusError):
+                    backup_qdrant(tmp_path)
+            else:
+                backup_qdrant(tmp_path)
+
+        mock_store.client.delete_snapshot.assert_called_once_with("test_col", "snap.snapshot")
+
 
 class TestRestoreQdrant:
     def test_uploads_snapshot(self, tmp_path, monkeypatch):
@@ -230,6 +262,62 @@ class TestCreateBackup:
             result = create_backup(tmp_path)
 
         assert re.match(r"\d{8}_\d{6}$", result.name)
+
+    def test_failure_removes_partial_dir_and_keeps_old_backups(self, tmp_path, monkeypatch):
+        from mnemolith.backup import create_backup
+
+        monkeypatch.setenv("BACKUP_KEEP", "1")
+        old = [tmp_path / "20260101_000000", tmp_path / "20260102_000000"]
+        for d in old:
+            d.mkdir()
+
+        with patch("mnemolith.backup.backup_postgres", side_effect=RuntimeError("pg_dump failed")), \
+             patch("mnemolith.backup.backup_vector_store"), \
+             pytest.raises(RuntimeError, match="pg_dump failed"):
+            create_backup(tmp_path)
+
+        assert sorted(tmp_path.iterdir()) == old
+
+    def test_prunes_old_backups_after_success(self, tmp_path, monkeypatch):
+        from mnemolith.backup import create_backup
+
+        monkeypatch.setenv("BACKUP_KEEP", "2")
+        for name in ["20260101_000000", "20260102_000000", "20260103_000000"]:
+            (tmp_path / name).mkdir()
+
+        with patch("mnemolith.backup.backup_postgres"), \
+             patch("mnemolith.backup.backup_vector_store"):
+            result = create_backup(tmp_path)
+
+        assert sorted(tmp_path.iterdir()) == [tmp_path / "20260103_000000", result]
+
+
+class TestPruneBackups:
+    def test_keeps_newest_and_ignores_other_entries(self, tmp_path):
+        from mnemolith.backup import prune_backups
+
+        names = ["20260101_150000", "20260102_150000", "20260103_150000", "20260104_150000", "20260105_150000"]
+        for name in names:
+            (tmp_path / name).mkdir()
+            (tmp_path / name / "pg_dump.sql").write_text("dump")
+        (tmp_path / "not-a-backup").mkdir()
+        (tmp_path / "20260100_000000.txt").write_text("stray file")
+
+        removed = prune_backups(tmp_path, keep=2)
+
+        assert sorted(removed) == [tmp_path / n for n in names[:3]]
+        assert sorted(p.name for p in tmp_path.iterdir()) == [
+            "20260100_000000.txt", "20260104_150000", "20260105_150000", "not-a-backup",
+        ]
+
+    def test_keep_zero_disables_pruning(self, tmp_path):
+        from mnemolith.backup import prune_backups
+
+        for name in ["20260101_150000", "20260102_150000"]:
+            (tmp_path / name).mkdir()
+
+        assert prune_backups(tmp_path, keep=0) == []
+        assert len(list(tmp_path.iterdir())) == 2
 
 
 class TestRestoreBackup:

@@ -73,6 +73,11 @@ def get_backup_dir() -> Path:
     return Path(os.environ.get("BACKUP_DIR", "~/.mnemolith/backups")).expanduser()
 
 
+def get_backup_keep() -> int:
+    """Number of most recent backups to keep; 0 keeps them all."""
+    return int(os.environ.get("BACKUP_KEEP", "14"))
+
+
 def get_postgres_conn_params() -> dict[str, str]:
     """Return dict with host, port, user, password, dbname for pg_dump/psql."""
     user = os.environ.get("POSTGRES_USER")

@@ -20,6 +20,7 @@ Mnemolith is configured through environment variables. You can set them in a `.e
 | `POSTGRES_HOST` | PostgreSQL host | `localhost` |
 | `POSTGRES_PORT` | PostgreSQL port | `5432` |
 | `BACKUP_DIR` | Directory for backups | `~/.mnemolith/backups/` |
+| `BACKUP_KEEP` | Number of most recent backups to keep (`0` keeps all) | `14` |
 | `SPARSE_SEARCH_ENABLED` | Hybrid dense + BM25 sparse search (**Qdrant only**) | `true` |
 | `TIKTOKEN_CACHE_DIR` | Where the tokenizer vocab is cached | *(a temp dir)* |
 

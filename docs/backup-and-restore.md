@@ -27,6 +27,18 @@ This creates a timestamped folder (e.g. `~/.mnemolith/backups/20260315_143022/`)
 
 With `VECTOR_BACKEND=pgvector`, a single `pg_dump.sql` captures everything — no separate vector snapshot is needed.
 
+The Qdrant snapshot is deleted from the Qdrant server once it's downloaded, so snapshots don't pile up inside the container. If a backup fails, its partial folder is removed.
+
+### Retention
+
+After each successful backup, older backups are pruned so only the 14 most recent are kept. Change the number in your `.env`, or set it to `0` to keep everything:
+
+```bash
+BACKUP_KEEP=30
+```
+
+Only timestamped folders (`YYYYMMDD_HHMMSS`) are pruned; anything else in the backup directory is left alone.
+
 ### Custom backup directory
 
 ```bash
@@ -69,13 +81,7 @@ PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin
 - The `PATH` specification is needed so that cron can find docker, which is needed for the backup
 - To find your `uv` path: `which uv`.
 
-### Cleanup old backups
-
-Each backup is a self-contained folder. To keep only the last 30 days, add another cron entry:
-
-```cron
-0 3 * * * find ~/.mnemolith/backups -maxdepth 1 -type d -mtime +30 -exec rm -rf {} +
-```
+No separate cleanup job is needed: each run prunes old backups itself (see [Retention](#retention)).
 
 ### Verify it works
 
