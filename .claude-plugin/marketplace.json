@@ -8,7 +8,7 @@
     {
       "name": "mnemolith",
       "description": "Obsidian vault toolkit: semantic search (MCP) + note creation (skill)",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "source": "./"
     }
   ]
