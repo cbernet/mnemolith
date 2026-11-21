@@ -1,7 +1,7 @@
 {
   "name": "mnemolith",
   "description": "Work with user data (unstructured: obsidian, structured: postgresql). MCP + note creation skill",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "author": {
     "name": "Colin Bernet",
     "email": "c.bernet@cynapps.ai"
